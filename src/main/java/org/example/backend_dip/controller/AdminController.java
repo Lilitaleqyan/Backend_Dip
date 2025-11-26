@@ -1,13 +1,18 @@
 package org.example.backend_dip.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.backend_dip.entity.BookReader;
 import org.example.backend_dip.entity.books.Book;
 import org.example.backend_dip.entity.books.BookCopy;
+import org.example.backend_dip.entity.books.BookDto;
 import org.example.backend_dip.entity.enums.Status;
 import org.example.backend_dip.repo.BookRepo;
 import org.example.backend_dip.service.AdminService;
 import org.example.backend_dip.service.BookCopyService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,8 +28,8 @@ import java.util.UUID;
 @RequestMapping("/admin")
 public class AdminController {
 
-//    @Value("${file.upload-dir}")
-    private String uploadDir="C\\Users\\User";
+    @Value("${file.upload-dir}")
+    private String uploadDir;
     private final AdminService service;
     private final BookRepo bookRepo;
     private final BookCopyService bookCopyService;
@@ -34,58 +39,54 @@ public class AdminController {
         this.bookRepo = bookRepo;
         this.bookCopyService = bookCopyService;
     }
-
-    @PostMapping("/add")
-    public ResponseEntity<Book> addBook(@RequestParam("title") String title,
-                                        @RequestParam("author") String author,
-                                        @RequestParam("file") MultipartFile multipartFile) {
-
-        int count = 1;
+    @CrossOrigin(origins = "http://localhost:5000")
+    @PostMapping(path = "/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Book> addBook(
+            @RequestPart("book") String bookJson,
+            @RequestPart(value = "file", required = false) MultipartFile file
+    ) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        BookDto bookDto = mapper.readValue(bookJson, BookDto.class);
+        System.out.println(bookDto.getTitle());
+        System.out.println("File: " + (file != null ? file.getOriginalFilename() : "no file"));
         try {
-            File file = new File(uploadDir);
-            if (!file.exists()) file.mkdirs();
+            Book bookEntity = Book.builder()
+                    .title(bookDto.getTitle())
+                    .author(bookDto.getAuthor())
+                    .category(bookDto.getCategory())
+                    .description(bookDto.getDescription())
+                    .pages(bookDto.getPages())
+                    .coverUrl(bookDto.getCoverUrl())
+                    .build();
 
-            String originalFileName = multipartFile.getOriginalFilename();
-            String extension = originalFileName.substring(originalFileName.lastIndexOf(".") + 1);
-            if (!extension.equalsIgnoreCase("pdf")) {
-                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+
+            if (file != null && !file.isEmpty()) {
+                String originalFileName = file.getOriginalFilename();
+                String extension = originalFileName.substring(originalFileName.lastIndexOf('.') + 1);
+
+                String uniqueFileName = UUID.randomUUID() + "_" + originalFileName;
+                Path path = Paths.get(uploadDir + File.separator + uniqueFileName);
+                Files.write(path, file.getBytes());
+
+                bookEntity.setFilePath(path.toString());
+                bookEntity.setFileType(extension);
             }
-            String filePath = uploadDir + File.separator + originalFileName;
 
-            Path path = Paths.get(filePath);
-            Files.write(path, multipartFile.getBytes());
+            service.addBook(bookEntity);
 
-            if (bookRepo.existsBookByAuthorAndTitle(author, title)) {
-                Book existingBook = bookRepo.findBookByAuthorOrTitle(author, title);
-                BookCopy bookCopy = new BookCopy();
-                bookCopy.setBook(existingBook);
-                bookCopy.setStatus(Status.AVAILABLE);
-                bookCopyService.save(bookCopy);
+            BookCopy bookCopy = new BookCopy();
+            bookCopy.setBook(bookEntity);
+            bookCopy.setStatus(Status.AVAILABLE);
+            bookCopyService.save(bookCopy);
 
-                existingBook.setCount(existingBook.getCount() + 1);
-                service.updateBook(existingBook);
-                return ResponseEntity.status(HttpStatus.CREATED).build();
-            } else {
-                Book book = Book.builder()
-                        .title(title)
-                        .author(author)
-                        .fileType(extension)
-                        .filePath(filePath)
-                        .count(count)
-                        .build();
-                service.addBook(book);
+            return ResponseEntity.ok(bookEntity);
 
-                BookCopy bookCopy = new BookCopy();
-                bookCopy.setBook(book);
-                bookCopy.setStatus(Status.AVAILABLE);
-                bookCopyService.save(bookCopy);
-                return ResponseEntity.status(HttpStatus.CREATED).body(book);
-            }
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
 
     @DeleteMapping("/removed/{id}")
     public ResponseEntity<Void> deleteBook(@PathVariable("id") long id) {
@@ -164,4 +165,5 @@ public class AdminController {
         List<BookReader> readers = service.findBookReaderBy(email, firstName, lastName, username);
         return ResponseEntity.ok(readers);
     }
-}
+
+    }

@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.stereotype.Repository;
 
+import java.awt.print.Book;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +14,8 @@ import java.util.Optional;
 public interface BookReaderRepo extends JpaRepository<BookReader, Long> {
 
     Optional<BookReader> findByUsername(String username);
+
+    Optional<BookReader> findByEmail(String email);
 
     List<BookReader> findBookReadersByEmailOrFirstNameOrLastNameOrUsernameIgnoreCase(String email,
                                                                                      String firstName,
@@ -26,4 +29,5 @@ public interface BookReaderRepo extends JpaRepository<BookReader, Long> {
     boolean existsByUsername(String username);
 
     boolean existsByEmail(String email);
+
 }

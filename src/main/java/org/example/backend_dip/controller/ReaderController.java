@@ -4,6 +4,7 @@ import org.example.backend_dip.entity.BookComments;
 import org.example.backend_dip.entity.BookReader;
 import org.example.backend_dip.entity.books.Book;
 import org.example.backend_dip.entity.books.BookCopy;
+import org.example.backend_dip.repo.BookRepo;
 import org.example.backend_dip.service.ReadersService;
 import org.example.backend_dip.service.ReservService;
 import org.springframework.http.HttpStatus;
@@ -12,16 +13,18 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/reader")
 public class ReaderController {
     private final ReadersService service;
     private final ReservService reservService;
-
-    public ReaderController(ReadersService service, ReservService reservService) {
+    private final BookRepo bookRepo;
+    public ReaderController(ReadersService service, ReservService reservService, BookRepo bookRepo) {
         this.service = service;
         this.reservService = reservService;
+        this.bookRepo = bookRepo;
     }
 
     @GetMapping("/findBook")
@@ -61,12 +64,20 @@ public class ReaderController {
     public ResponseEntity<?> update(@RequestBody BookReader bookReader, @RequestParam("id") long readerId) {
         return service.findById(readerId).map(eBook ->
         {
+            // Check if username exists for another user
             if (service.existsByUsername(bookReader.getUsername())) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body("username  already exists");
+                Optional<BookReader> userWithUsername = service.findByUsername(bookReader.getUsername());
+                if (userWithUsername.isPresent() && !userWithUsername.get().getId().equals(readerId)) {
+                    return ResponseEntity.status(HttpStatus.CONFLICT).body("username already exists");
+                }
             }
 
+            // Check if email exists for another user
             if (service.existsByEmail(bookReader.getEmail())) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body("email already exists");
+                Optional<BookReader> userWithEmail = service.findByEmail(bookReader.getEmail());
+                if (userWithEmail.isPresent() && !userWithEmail.get().getId().equals(readerId)) {
+                    return ResponseEntity.status(HttpStatus.CONFLICT).body("email already exists");
+                }
             }
             eBook.setLastName(bookReader.getLastName());
             eBook.setFirstName(bookReader.getFirstName());
@@ -77,5 +88,10 @@ public class ReaderController {
             return ResponseEntity.ok(service.update(eBook));
 
         }).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+    @GetMapping("/books")
+    public ResponseEntity<List<Book>> getBooks() {
+        List<Book> books = bookRepo.findAll();
+        return ResponseEntity.ok(books);
     }
 }

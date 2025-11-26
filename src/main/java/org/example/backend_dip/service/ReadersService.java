@@ -68,4 +68,13 @@ public class ReadersService {
     public boolean existsByEmail(String email) {
         return repo.existsByEmail(email);
     }
+
+    public Optional<BookReader> findByUsername(String username) {
+        return repo.findByUsername(username);
+    }
+
+    public Optional<BookReader> findByEmail(String email) {
+        return repo.findByEmail(email);
+    }
+
 }

@@ -1,5 +1,6 @@
 package org.example.backend_dip.entity.books;//package com.example.demo.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.backend_dip.entity.BookComments;
@@ -16,13 +17,6 @@ import java.util.List;
 public class Book {
 
     @Id
-//    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "book_seq")
-//    @SequenceGenerator(
-//            name = "book_seq",
-//            sequenceName = "book_sequence",
-//
-//            allocationSize = 1,
-//            initialValue = 1)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -31,6 +25,28 @@ public class Book {
 
     @Column
     private String author;
+
+    @Column
+    private String description;
+
+    @Column
+    private String category;
+
+    @Column
+    private String coverUrl;
+
+    @Column
+    private String audioUrl;
+
+    @Column
+    private String duration;
+
+    @Column
+    private String narrator;
+
+
+    @Column
+    private Integer pages;
 
     @Column
     private String fileType;
@@ -45,10 +61,11 @@ public class Book {
 //    private String genre;
 
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<BookCopy> bookCopyList;
 
-
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<BookComments> commentList;
 }
 

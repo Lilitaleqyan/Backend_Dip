@@ -37,8 +37,7 @@ public class LoginController {
         this.passwordEncoder = passwordEncoder;
         this.readerService = readerService;
     }
-
-    @PostMapping("/register")
+   @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody BookReader bookReader) {
         bookReader.setRole(Role.USER);
         bookReader = BookReader.builder()

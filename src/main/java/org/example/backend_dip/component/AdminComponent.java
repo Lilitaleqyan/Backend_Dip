@@ -1,6 +1,5 @@
 package org.example.backend_dip.component;
 
-
 import org.example.backend_dip.entity.AdminForControl;
 import org.example.backend_dip.entity.enums.Role;
 import org.example.backend_dip.securityConfig.SecurityConfig;
@@ -31,6 +30,7 @@ public class AdminComponent implements ApplicationRunner {
         if (service.existsByUsername(username)) {
             return;
         }
+
         AdminForControl admin = new AdminForControl();
         admin.setRole(Role.ADMIN);
         admin.setUsername(username);

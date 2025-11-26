@@ -20,7 +20,7 @@ public class JwtUtil {
                 .signWith(SignatureAlgorithm.HS256, secret)
                 .compact();
     }
-
+    
     public String extractUsername(String token) {
         return Jwts.parser()
                 .setSigningKey(secret)
