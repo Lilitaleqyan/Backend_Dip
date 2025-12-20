@@ -57,6 +57,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/chat", "/reader/**").hasRole("USER")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/full/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/file/**").permitAll()
                         .anyRequest().authenticated()
                 ).sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -79,6 +81,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 //        configuration.addAllowedOriginPattern("*");
         configuration.setAllowedOrigins(List.of("http://localhost:5000"));
+
         configuration.setAllowCredentials(true);
 //        configuration.addAllowedOrigin("*");
         configuration.addAllowedHeader("*");

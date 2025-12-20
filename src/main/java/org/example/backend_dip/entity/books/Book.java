@@ -1,4 +1,4 @@
-package org.example.backend_dip.entity.books;//package com.example.demo.entity;
+package org.example.backend_dip.entity.books;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -20,38 +20,35 @@ public class Book {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
+    @Column(length = 1000)
     private String title;
 
-    @Column
+    @Column(length = 1000)
     private String author;
 
-    @Column
+    @Column(columnDefinition = "text")
     private String description;
 
-    @Column
+    @Column(length = 1000)
     private String category;
 
-    @Column
+    @Column(columnDefinition = "text")
     private String coverUrl;
 
-    @Column
+    @Column(columnDefinition = "text")
     private String audioUrl;
 
-    @Column
     private String duration;
 
-    @Column
     private String narrator;
 
 
     @Column
     private Integer pages;
 
-    @Column
     private String fileType;
 
-    @Column
+    @Column(columnDefinition = "text")
     private String filePath;
 
     @Column

@@ -82,6 +82,8 @@ public class LoginController {
         if (session != null) {
             session.invalidate();
         }
-        return "Log out Succesfuly";
+        return "Log out successfully";
     }
+
+
 }

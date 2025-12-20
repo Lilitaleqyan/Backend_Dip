@@ -64,7 +64,6 @@ public class ReaderController {
     public ResponseEntity<?> update(@RequestBody BookReader bookReader, @RequestParam("id") long readerId) {
         return service.findById(readerId).map(eBook ->
         {
-            // Check if username exists for another user
             if (service.existsByUsername(bookReader.getUsername())) {
                 Optional<BookReader> userWithUsername = service.findByUsername(bookReader.getUsername());
                 if (userWithUsername.isPresent() && !userWithUsername.get().getId().equals(readerId)) {
@@ -72,7 +71,6 @@ public class ReaderController {
                 }
             }
 
-            // Check if email exists for another user
             if (service.existsByEmail(bookReader.getEmail())) {
                 Optional<BookReader> userWithEmail = service.findByEmail(bookReader.getEmail());
                 if (userWithEmail.isPresent() && !userWithEmail.get().getId().equals(readerId)) {

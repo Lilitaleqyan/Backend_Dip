@@ -40,8 +40,8 @@ public class AdminService {
         adminRepo.save(admin);
     }
 
-    public void addBook(Book book) {
-        bookRepo.save(book);
+    public Book addBook(Book book) {
+        return  bookRepo.save(book);
     }
 
     public void removeBook(long id) {
