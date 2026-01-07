@@ -29,6 +29,11 @@ public class BookReader {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @OneToMany(mappedBy = "bookReader", cascade = CascadeType.ALL)
+
+    @OneToMany(mappedBy = "reader", cascade = CascadeType.ALL)
+    private List<Reservation> bookRelations;
+
+
+    @OneToMany(mappedBy = "bookReader", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<BookComments> bookList;
 }

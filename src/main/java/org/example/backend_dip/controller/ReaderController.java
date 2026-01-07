@@ -34,20 +34,30 @@ public class ReaderController {
     }
 
     @PostMapping("/reserv")
-    public ResponseEntity<Book> reserveBook(@RequestBody BookCopy bookCopy, @RequestParam("id") long readerId) {
-        boolean hasActive = reservService.existsByReaderId(readerId);
-        if (hasActive) {
-            return ResponseEntity.badRequest().build();
-        } else {
-            reservService.reserveBook(readerId, bookCopy.getId());
+    public ResponseEntity<?> reserveBook(@RequestParam("bookId") Long bookId, @RequestParam("id") long readerId) {
+        try {
+            boolean hasActive = reservService.existsByReaderId(readerId);
+            if (hasActive) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Reader already has an active reservation");
+            }
+            reservService.reserveBook(readerId, bookId);
             return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage());
         }
     }
 
     @PostMapping("/return")
-    public ResponseEntity<Book> returnBook(@RequestParam("id") long reservationId) {
-        reservService.returnBook(reservationId);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> returnBook(@RequestParam("id") long reservationId) {
+        try {
+            reservService.returnBook(reservationId);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage());
+        }
     }
 
     @PostMapping("/addComment")

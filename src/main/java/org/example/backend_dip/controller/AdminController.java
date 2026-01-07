@@ -1,8 +1,7 @@
 package org.example.backend_dip.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.backend_dip.entity.BookReader;
+import org.example.backend_dip.entity.BookReaderForAdmin;
 import org.example.backend_dip.entity.books.Book;
 import org.example.backend_dip.entity.books.BookCopy;
 import org.example.backend_dip.entity.books.BookDto;
@@ -11,9 +10,6 @@ import org.example.backend_dip.repo.BookRepo;
 import org.example.backend_dip.service.AdminService;
 import org.example.backend_dip.service.BookCopyService;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,13 +17,13 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -121,7 +117,7 @@ public class AdminController {
 
 
     @DeleteMapping("/removed/{id}")
-    public ResponseEntity<Void> deleteBook(@PathVariable("id") long id) {
+    public ResponseEntity<Void> deleteBook(@PathVariable("id") long id) throws IOException {
         service.removeBook(id);
         return ResponseEntity.noContent().build();
     }
@@ -141,15 +137,16 @@ public class AdminController {
 
 
     @GetMapping("/getAllUsers")
-    public ResponseEntity<List<BookReader>> getAllUsers() {
-        List<BookReader> readers = service.getAllReaders();
+    public ResponseEntity<List<BookReaderForAdmin>> getAllUsers() {
+        List<BookReaderForAdmin> readers = service.getAllReadersForAdmin();
         return ResponseEntity.ok(readers);
     }
 
     @PutMapping(value = "/update/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> updateBook(@PathVariable("id") Long id,
                                         @RequestPart("book") BookDto bookDto,
-                                        @RequestPart(value = "file", required = false) MultipartFile multipartFile) {
+                                        @RequestPart(value = "file", required = false) MultipartFile multipartFile,
+                                        @RequestPart(value = "audioFile", required = false) MultipartFile audioFile) {
         return bookRepo.findBookById(id).map(existingBook -> {
             try {
                 existingBook.setTitle(bookDto.getTitle());
@@ -160,7 +157,7 @@ public class AdminController {
                 existingBook.setCoverUrl(bookDto.getCoverUrl());
                 existingBook.setFileType(bookDto.getFileType());
                 existingBook.setFilePath(bookDto.getFilePath());
-                existingBook.setAudioUrl(bookDto.getAudioUrl());
+//               existingBook.setAudioUrl(bookDto.getAudioUrl());
                 existingBook.setNarrator(bookDto.getNarrator());
                 existingBook.setDuration(bookDto.getDuration());
 
@@ -180,6 +177,23 @@ public class AdminController {
                     existingBook.setFileType(extension);
                     existingBook.setFilePath(filePath);
                 }
+                if (bookDto.getCategory().equalsIgnoreCase("audiobook") && audioFile != null && !audioFile.isEmpty()) {
+
+
+                    Path audioDir = Paths.get(uploadDir, "audio");
+                    Files.createDirectories(audioDir);
+
+                    String uniqueFileName = "audio" + existingBook.getId() + "_" + audioFile.getOriginalFilename();
+
+                    Path path = audioDir.resolve(uniqueFileName); // uploads/audio/audio<ID>_file.mp3
+
+                    Files.copy(audioFile.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+
+                    String fileUrl = "/uploads/audio/" + uniqueFileName;
+                existingBook.setAudioUrl(fileUrl);
+                }
+
+
 
                 return ResponseEntity.ok(service.updateBook(existingBook));
 

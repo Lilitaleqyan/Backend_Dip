@@ -21,6 +21,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 public class LoginController {
@@ -41,6 +44,7 @@ public class LoginController {
     public ResponseEntity<?> register(@RequestBody BookReader bookReader) {
         bookReader.setRole(Role.USER);
         bookReader = BookReader.builder()
+                .id(bookReader.getId())
                 .username(bookReader.getUsername())
                 .email(bookReader.getEmail())
                 .phone(bookReader.getPhone())
@@ -54,7 +58,10 @@ public class LoginController {
         }
         else {
             readerService.save(bookReader);
-            return ResponseEntity.status(HttpStatus.CREATED).build();
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Registration successful");
+            return ResponseEntity.ok(response);
+
         }
     }
 

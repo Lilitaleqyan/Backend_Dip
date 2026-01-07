@@ -1,5 +1,8 @@
 package org.example.backend_dip.entity.books;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,7 +27,9 @@ public class BookCopy {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
+
     @ManyToOne
+    @JoinColumn(name = "book_id")
     Book book;
 
     @Enumerated(EnumType.STRING)
