@@ -8,7 +8,7 @@ Backend application developed with Java and Spring Boot as a diploma project.
 - Spring Data JPA
 - Hibernate
 - REST API
-- MySQL
+- PostgreSQL
 - Maven
 
 ##  Features
