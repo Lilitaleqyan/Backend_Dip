@@ -22,3 +22,7 @@ Backend application developed with Java and Spring Boot as a diploma project.
 1. Clone the repository:
    ```bash
    git clone https://github.com/Lilitaleqyan/Backend_Dip.git
+
+2.Configure database in application.properties
+
+3.Run the application:
