@@ -36,6 +36,7 @@ public class ReaderController {
     @PostMapping("/reserv")
     public ResponseEntity<?> reserveBook(@RequestParam("bookId") Long bookId, @RequestParam("id") long readerId) {
         try {
+            System.out.println("readerId " + readerId);
             boolean hasActive = reservService.existsByReaderId(readerId);
             if (hasActive) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -49,16 +50,6 @@ public class ReaderController {
         }
     }
 
-    @PostMapping("/return")
-    public ResponseEntity<?> returnBook(@RequestParam("id") long reservationId) {
-        try {
-            reservService.returnBook(reservationId);
-            return ResponseEntity.ok().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(e.getMessage());
-        }
-    }
 
     @PostMapping("/addComment")
     public ResponseEntity<BookComments> addComment(@RequestBody BookComments bookComments, @RequestParam("id") long bookId, @RequestParam("readerId") long readerId) {

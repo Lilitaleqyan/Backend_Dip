@@ -2,11 +2,14 @@ package org.example.backend_dip.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import org.example.backend_dip.entity.AdminForControl;
 import org.example.backend_dip.entity.BookReader;
 import org.example.backend_dip.entity.enums.Role;
 import org.example.backend_dip.entity.requestOrresponse.AuthRequest;
 import org.example.backend_dip.entity.requestOrresponse.AuthResponse;
+import org.example.backend_dip.repo.BookReaderRepo;
 import org.example.backend_dip.security.JwtUtil;
+import org.example.backend_dip.service.AdminService;
 import org.example.backend_dip.service.MyUserDetailsService;
 import org.example.backend_dip.service.ReadersService;
 import org.springframework.http.HttpStatus;
@@ -20,9 +23,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -32,55 +37,71 @@ public class LoginController {
     private final MyUserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
     private final ReadersService readerService;
+    private final AdminService adminService;
 
-    public LoginController(JwtUtil jwtUtil, AuthenticationManager authenticationManager, MyUserDetailsService userDetailsService, PasswordEncoder passwordEncoder, ReadersService readerService) {
+    public LoginController(JwtUtil jwtUtil, AuthenticationManager authenticationManager, MyUserDetailsService userDetailsService, PasswordEncoder passwordEncoder, ReadersService readerService, AdminService adminService) {
         this.jwtUtil = jwtUtil;
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
         this.readerService = readerService;
+        this.adminService = adminService;
     }
-   @PostMapping("/register")
+    @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody BookReader bookReader) {
-        bookReader.setRole(Role.USER);
-        bookReader = BookReader.builder()
-                .id(bookReader.getId())
-                .username(bookReader.getUsername())
-                .email(bookReader.getEmail())
-                .phone(bookReader.getPhone())
-                .firstName(bookReader.getFirstName())
-                .lastName(bookReader.getLastName())
-                .password(passwordEncoder.encode(bookReader.getPassword()))
-                .role(bookReader.getRole())
-                .build();
         if (readerService.existsByUsernameAndEmail(bookReader.getUsername(), bookReader.getEmail())) {
-            return new ResponseEntity<>(HttpStatus.CONFLICT);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", "User already exists"));
         }
-        else {
-            readerService.save(bookReader);
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Registration successful");
-            return ResponseEntity.ok(response);
 
-        }
+        bookReader.setRole(Role.USER);
+        bookReader.setPassword(passwordEncoder.encode(bookReader.getPassword()));
+
+        BookReader savedReader = readerService.save(bookReader);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", savedReader.getId());
+        response.put("username", savedReader.getUsername());
+        response.put("email", savedReader.getEmail());
+        response.put("firstName", savedReader.getFirstName());
+        response.put("lastName", savedReader.getLastName());
+        response.put("role", savedReader.getRole());
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest request) {
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.getUsername(),
-                            request.getPassword()
-                    )
+                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
             );
         } catch (BadCredentialsException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid username or password");
         }
 
         final UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
         final String jwt = jwtUtil.generateJwt(userDetails.getUsername());
-        return ResponseEntity.ok(new AuthResponse(jwt));
+
+        if ("admin_manager".equals(request.getUsername())) {
+            AdminForControl admin = adminService.findByUsername(request.getUsername())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admin not found"));
+            return ResponseEntity.ok(new AuthResponse(
+                    jwt,
+                    admin.getId(),
+                    admin.getUsername(),
+                    admin.getRole()
+            ));
+        }
+        BookReader user = readerService.findByUsername(request.getUsername())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        return ResponseEntity.ok(new AuthResponse(
+                jwt,
+                user.getId(),
+                user.getUsername(),
+                user.getRole()
+        ));
     }
 
     @PostMapping("/log_out")

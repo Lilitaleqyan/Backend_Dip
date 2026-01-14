@@ -5,10 +5,12 @@ import org.example.backend_dip.entity.BookReaderForAdmin;
 import org.example.backend_dip.entity.books.Book;
 import org.example.backend_dip.entity.books.BookCopy;
 import org.example.backend_dip.entity.books.BookDto;
+import org.example.backend_dip.entity.books.ReservBookDto;
 import org.example.backend_dip.entity.enums.Status;
 import org.example.backend_dip.repo.BookRepo;
 import org.example.backend_dip.service.AdminService;
 import org.example.backend_dip.service.BookCopyService;
+import org.example.backend_dip.service.ReservService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -23,7 +25,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -37,11 +38,13 @@ public class AdminController {
     private final AdminService service;
     private final BookRepo bookRepo;
     private final BookCopyService bookCopyService;
+    private final ReservService reservService;
 
-    public AdminController(AdminService service, BookRepo bookRepo, BookCopyService bookCopyService) {
+    public AdminController(AdminService service, BookRepo bookRepo, BookCopyService bookCopyService, ReservService reservService) {
         this.service = service;
         this.bookRepo = bookRepo;
         this.bookCopyService = bookCopyService;
+        this.reservService = reservService;
     }
 
     @PostMapping(path = "/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -216,5 +219,29 @@ public class AdminController {
         List<BookReader> readers = service.findBookReaderBy(email, firstName, lastName, username);
         return ResponseEntity.ok(readers);
     }
+
+    @GetMapping("/reservDetail/{id}")
+    public ResponseEntity<List<ReservBookDto>> getReservBook(@PathVariable Long id) {
+        return ResponseEntity.ok(service.getReservationBooks(id));
+    }
+
+    @GetMapping("/returnDetail/{id}")
+    public ResponseEntity<List<ReservBookDto>> getReturnBook(@PathVariable Long id) {
+        return ResponseEntity.ok(service.getReturnedBooks(id));
+    }
+
+
+    @PostMapping("/return/{reservationId}")
+    public ResponseEntity<?> returnBook(@PathVariable long reservationId) {
+        try {
+            reservService.returnBook(reservationId);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage());
+        }
+    }
+
+
 
 }

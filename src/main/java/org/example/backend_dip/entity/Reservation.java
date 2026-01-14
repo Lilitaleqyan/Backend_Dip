@@ -3,6 +3,7 @@ package org.example.backend_dip.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.backend_dip.entity.books.BookCopy;
+import org.example.backend_dip.entity.enums.Status;
 
 import java.time.LocalDate;
 
@@ -27,4 +28,6 @@ public class Reservation {
     private LocalDate returnDate;
 
     private boolean active;
+
+    private Status status;
 }

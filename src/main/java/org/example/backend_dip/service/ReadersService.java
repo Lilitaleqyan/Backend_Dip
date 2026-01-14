@@ -25,8 +25,9 @@ public class ReadersService {
         this.commentRepo = commentRepo;
     }
 
-    public void save(BookReader reader) {
+    public BookReader save(BookReader reader) {
           repo.save(reader);
+        return reader;
     }
 
     public List<Book> findBookByAuthorOrTitle(String author, String title) {

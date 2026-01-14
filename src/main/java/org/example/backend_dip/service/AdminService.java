@@ -1,6 +1,7 @@
 package org.example.backend_dip.service;
 
 
+import org.example.backend_dip.entity.books.ReservBookDto;
 import org.example.backend_dip.entity.AdminForControl;
 import org.example.backend_dip.entity.BookReader;
 import org.example.backend_dip.entity.BookReaderForAdmin;
@@ -9,6 +10,7 @@ import org.example.backend_dip.entity.enums.Status;
 import org.example.backend_dip.repo.AdminRepo;
 import org.example.backend_dip.repo.BookReaderRepo;
 import org.example.backend_dip.repo.BookRepo;
+import org.example.backend_dip.repo.ReservationRepo;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -25,19 +27,22 @@ public class AdminService {
     private final BookRepo bookRepo;
     private final BookReaderRepo bookReaderRepo;
     private final ReadersService readersService;
+    private final ReservationRepo reservationRepo;
 
-    public AdminService(AdminRepo adminRepo, BookRepo bookRepo, BookReaderRepo bookReaderRepo, ReadersService readersService) {
+
+    public AdminService(AdminRepo adminRepo, BookRepo bookRepo, BookReaderRepo bookReaderRepo, ReadersService readersService, ReservationRepo reservationRepo) {
         this.adminRepo = adminRepo;
         this.bookRepo = bookRepo;
         this.bookReaderRepo = bookReaderRepo;
         this.readersService = readersService;
+        this.reservationRepo = reservationRepo;
     }
 
     public boolean existsByUsername(String username) {
         return adminRepo.existsByUsername(username);
     }
 
-    Optional<AdminForControl> findByUsername(String username) {
+    public Optional<AdminForControl> findByUsername(String username) {
         return adminRepo.findByUsername(username);
     }
 
@@ -52,7 +57,7 @@ public class AdminService {
     public void removeBook(long id) throws IOException {
         Book book = bookRepo.findById(id).orElseThrow(() -> new RuntimeException("file not found"));
         Path path = Path.of(book.getFilePath());
-        System.out.println("path  " +   path);
+        System.out.println("path  " + path);
 
         if (Files.exists(path) && Files.isRegularFile(path)) {
             Files.delete(path);
@@ -91,28 +96,25 @@ public class AdminService {
         }
         return readers.stream()
                 .map(r -> {
-                    // Default values are 0 if no reservations exist
                     long availableCount = 0L;
                     long reservedCount = 0L;
                     long returnedCount = 0L;
-                    
-                    // Calculate counts only if reservations exist
+
                     if (r.getBookRelations() != null && !r.getBookRelations().isEmpty()) {
                         availableCount = r.getBookRelations().stream()
-                                .filter(res -> res != null && res.getBookCopy() != null && 
+                                .filter(res -> res != null && res.getBookCopy() != null &&
                                         res.getBookCopy().getStatus() == Status.AVAILABLE)
                                 .count();
                         reservedCount = r.getBookRelations().stream()
-                                .filter(res -> res != null && res.getBookCopy() != null && 
+                                .filter(res -> res != null && res.getBookCopy() != null &&
                                         res.getBookCopy().getStatus() == Status.RESERVED)
                                 .count();
                         returnedCount = r.getBookRelations().stream()
-                                .filter(res -> res != null && res.getBookCopy() != null && 
+                                .filter(res -> res != null && res.getBookCopy() != null &&
                                         res.getBookCopy().getStatus() == Status.RETURNED)
                                 .count();
                     }
-                    
-                    // Always return 0 if no reservations, otherwise return calculated counts
+
                     return BookReaderForAdmin.builder()
                             .id(r.getId())
                             .firstName(r.getFirstName() != null ? r.getFirstName() : "")
@@ -146,9 +148,38 @@ public class AdminService {
                 username);
     }
 
-    public List<BookReader> findAll() {
-       return bookReaderRepo.findAll();
+
+
+    public List<ReservBookDto> getReservationBooks(Long readerId) {
+        return reservationRepo.findByReaderId(readerId)
+                .stream()
+                .map(r->new ReservBookDto(
+                        r.getId(),
+                        r.getBookCopy().getBook().getId(),
+                        r.getBookCopy().getBook().getTitle(),
+                        r.getBookCopy().getBook().getAuthor(),
+                        r.getBookCopy().getBook().getCoverUrl(),
+                        r.getReservationDate(),
+                        r.getBookCopy().getStatus().name()
+                )).toList();
     }
+
+    public List<ReservBookDto> getReturnedBooks(Long readerId) {
+        return reservationRepo
+                .findByReaderId(readerId)
+                .stream()
+                .map(r -> new ReservBookDto(
+                        r.getId(),
+                        r.getBookCopy().getBook().getId(),
+                        r.getBookCopy().getBook().getTitle(),
+                        r.getBookCopy().getBook().getCoverUrl(),
+                        r.getBookCopy().getBook().getAuthor(),
+                        r.getReservationDate(),
+                        r.getBookCopy().getStatus().name()
+                ))
+                .toList();
+    }
+
 }
 
 
