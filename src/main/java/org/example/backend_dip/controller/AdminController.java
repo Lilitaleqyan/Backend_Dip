@@ -10,6 +10,7 @@ import org.example.backend_dip.entity.enums.Status;
 import org.example.backend_dip.repo.BookRepo;
 import org.example.backend_dip.service.AdminService;
 import org.example.backend_dip.service.BookCopyService;
+import org.example.backend_dip.service.ReadersService;
 import org.example.backend_dip.service.ReservService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -34,14 +35,15 @@ public class AdminController {
 
     @Value("${file.upload-dir}")
     private String uploadDir;
-
-    private final AdminService service;
+    private final AdminService adminService;
+    private final ReadersService readersService;
     private final BookRepo bookRepo;
     private final BookCopyService bookCopyService;
     private final ReservService reservService;
 
-    public AdminController(AdminService service, BookRepo bookRepo, BookCopyService bookCopyService, ReservService reservService) {
-        this.service = service;
+    public AdminController(AdminService adminService, ReadersService readersService, BookRepo bookRepo, BookCopyService bookCopyService, ReservService reservService) {
+        this.readersService = readersService;
+        this.adminService = adminService;
         this.bookRepo = bookRepo;
         this.bookCopyService = bookCopyService;
         this.reservService = reservService;
@@ -83,8 +85,7 @@ public class AdminController {
                 bookEntity.setFilePath(filePath.toString());
                 bookEntity.setFileType(extension);
             }
-            bookEntity =  service.addBook(bookEntity);
-
+            bookEntity = adminService.addBook(bookEntity);
 
 
             if (bookDto.getCategory().equalsIgnoreCase("audiobook") && audioFile != null && !audioFile.isEmpty()) {
@@ -103,7 +104,7 @@ public class AdminController {
                 bookEntity.setAudioUrl(fileUrl);
             }
 
-            service.addBook(bookEntity);
+            adminService.addBook(bookEntity);
 
             BookCopy bookCopy = new BookCopy();
             bookCopy.setBook(bookEntity);
@@ -121,27 +122,27 @@ public class AdminController {
 
     @DeleteMapping("/removed/{id}")
     public ResponseEntity<Void> deleteBook(@PathVariable("id") long id) throws IOException {
-        service.removeBook(id);
+        adminService.removeBook(id);
         return ResponseEntity.noContent().build();
     }
 
 
     @DeleteMapping("/removeUser/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable("id") long id) {
-        service.removeUser(id);
+        adminService.removeUser(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/getAllBooks")
     public ResponseEntity<List<Book>> getAllBooks() {
-        List<Book> books = service.getAllBooks();
+        List<Book> books = adminService.getAllBooks();
         return ResponseEntity.ok(books);
     }
 
 
     @GetMapping("/getAllUsers")
     public ResponseEntity<List<BookReaderForAdmin>> getAllUsers() {
-        List<BookReaderForAdmin> readers = service.getAllReadersForAdmin();
+        List<BookReaderForAdmin> readers = adminService.getAllReadersForAdmin();
         return ResponseEntity.ok(readers);
     }
 
@@ -193,12 +194,11 @@ public class AdminController {
                     Files.copy(audioFile.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
 
                     String fileUrl = "/uploads/audio/" + uniqueFileName;
-                existingBook.setAudioUrl(fileUrl);
+                    existingBook.setAudioUrl(fileUrl);
                 }
 
 
-
-                return ResponseEntity.ok(service.updateBook(existingBook));
+                return ResponseEntity.ok(adminService.updateBook(existingBook));
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -210,24 +210,25 @@ public class AdminController {
 
     @GetMapping("/findBook")
     public ResponseEntity<List<Book>> findBookByAuthorOrTitle(@RequestParam(required = false) String author, @RequestParam(required = false) String title) {
-        List<Book> books = service.findBookByAuthorOrTitle(author, title);
+        List<Book> books = adminService.findBookByAuthorOrTitle(author, title);
         return ResponseEntity.ok(books);
     }
 
     @GetMapping("/findReader")
     public ResponseEntity<List<BookReader>> findReaderBy(@RequestParam(required = false) String email, @RequestParam(required = false) String firstName, @RequestParam(required = false) String lastName, @RequestParam(required = false) String username) {
-        List<BookReader> readers = service.findBookReaderBy(email, firstName, lastName, username);
+        List<BookReader> readers = adminService.findBookReaderBy(email, firstName, lastName, username);
         return ResponseEntity.ok(readers);
     }
 
     @GetMapping("/reservDetail/{id}")
     public ResponseEntity<List<ReservBookDto>> getReservBook(@PathVariable Long id) {
-        return ResponseEntity.ok(service.getReservationBooks(id));
+        return ResponseEntity.ok(adminService.getReservationBooks(id));
     }
 
     @GetMapping("/returnDetail/{id}")
     public ResponseEntity<List<ReservBookDto>> getReturnBook(@PathVariable Long id) {
-        return ResponseEntity.ok(service.getReturnedBooks(id));
+        List<ReservBookDto> result = adminService.getReturnedBooks(id);
+        return ResponseEntity.ok(result);
     }
 
 
@@ -241,7 +242,6 @@ public class AdminController {
                     .body(e.getMessage());
         }
     }
-
 
 
 }

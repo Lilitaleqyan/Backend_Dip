@@ -14,5 +14,5 @@ public class ReservBookDto {
     private String author;
     private  String coverUrl;
     private LocalDate reservationDate;
-    private String status;
+    private String status ;
 }

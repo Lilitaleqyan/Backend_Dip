@@ -3,9 +3,11 @@ package org.example.backend_dip.service;
 import org.example.backend_dip.entity.BookComments;
 import org.example.backend_dip.entity.BookReader;
 import org.example.backend_dip.entity.books.Book;
+import org.example.backend_dip.entity.enums.Status;
 import org.example.backend_dip.repo.BookReaderRepo;
 import org.example.backend_dip.repo.BookRepo;
 import org.example.backend_dip.repo.CommentRepo;
+import org.example.backend_dip.repo.ReservationRepo;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,13 +18,15 @@ public class ReadersService {
     private final BookReaderRepo repo;
     private final BookRepo bookRepo;
     private final CommentRepo commentRepo;
+    private final ReservationRepo reservationRepo;
 
 
 
-    public ReadersService(BookReaderRepo repo, BookRepo bookRepo, CommentRepo commentRepo) {
+    public ReadersService(BookReaderRepo repo, BookRepo bookRepo, CommentRepo commentRepo, ReservationRepo reservationRepo) {
         this.repo = repo;
         this.bookRepo = bookRepo;
         this.commentRepo = commentRepo;
+        this.reservationRepo = reservationRepo;
     }
 
     public BookReader save(BookReader reader) {
@@ -78,4 +82,17 @@ public class ReadersService {
         return repo.findByEmail(email);
     }
 
+    public long getReservedCount(Long readerId) {
+        return reservationRepo.countByReaderIdAndStatus(
+                readerId,
+                Status.RESERVED
+        );
+    }
+
+    public long getReturnedCount(Long readerId) {
+        return reservationRepo.countByReaderIdAndStatus(
+                readerId,
+                Status.RETURNED
+        );
+    }
 }

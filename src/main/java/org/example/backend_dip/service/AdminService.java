@@ -1,6 +1,7 @@
 package org.example.backend_dip.service;
 
 
+import org.example.backend_dip.entity.Reservation;
 import org.example.backend_dip.entity.books.ReservBookDto;
 import org.example.backend_dip.entity.AdminForControl;
 import org.example.backend_dip.entity.BookReader;
@@ -90,30 +91,20 @@ public class AdminService {
     }
 
     public List<BookReaderForAdmin> getAllReadersForAdmin() {
-        List<BookReader> readers = bookReaderRepo.findAllReadersWithRelations();
+        List<BookReader> readers = bookReaderRepo.findAll();
         if (readers == null || readers.isEmpty()) {
             return List.of();
         }
         return readers.stream()
                 .map(r -> {
+                    // AVAILABLE count is always 0 - reservations cannot be AVAILABLE
                     long availableCount = 0L;
-                    long reservedCount = 0L;
-                    long returnedCount = 0L;
-
-                    if (r.getBookRelations() != null && !r.getBookRelations().isEmpty()) {
-                        availableCount = r.getBookRelations().stream()
-                                .filter(res -> res != null && res.getBookCopy() != null &&
-                                        res.getBookCopy().getStatus() == Status.AVAILABLE)
-                                .count();
-                        reservedCount = r.getBookRelations().stream()
-                                .filter(res -> res != null && res.getBookCopy() != null &&
-                                        res.getBookCopy().getStatus() == Status.RESERVED)
-                                .count();
-                        returnedCount = r.getBookRelations().stream()
-                                .filter(res -> res != null && res.getBookCopy() != null &&
-                                        res.getBookCopy().getStatus() == Status.RETURNED)
-                                .count();
-                    }
+                    
+                    // Count active RESERVED reservations
+                    long reservedCount = reservationRepo.countActiveReservedByReaderId(r.getId());
+                    
+                    // Count RETURNED reservations
+                    long returnedCount = reservationRepo.countReturnedByReaderId(r.getId());
 
                     return BookReaderForAdmin.builder()
                             .id(r.getId())
@@ -151,35 +142,73 @@ public class AdminService {
 
 
     public List<ReservBookDto> getReservationBooks(Long readerId) {
-        return reservationRepo.findByReaderId(readerId)
-                .stream()
-                .map(r->new ReservBookDto(
-                        r.getId(),
-                        r.getBookCopy().getBook().getId(),
-                        r.getBookCopy().getBook().getTitle(),
-                        r.getBookCopy().getBook().getAuthor(),
-                        r.getBookCopy().getBook().getCoverUrl(),
-                        r.getReservationDate(),
-                        r.getBookCopy().getStatus().name()
-                )).toList();
-    }
-
-    public List<ReservBookDto> getReturnedBooks(Long readerId) {
-        return reservationRepo
-                .findByReaderId(readerId)
+        return reservationRepo.findActiveReservationsByReaderId(readerId)
                 .stream()
                 .map(r -> new ReservBookDto(
                         r.getId(),
                         r.getBookCopy().getBook().getId(),
                         r.getBookCopy().getBook().getTitle(),
-                        r.getBookCopy().getBook().getCoverUrl(),
                         r.getBookCopy().getBook().getAuthor(),
+                        r.getBookCopy().getBook().getCoverUrl(),
                         r.getReservationDate(),
-                        r.getBookCopy().getStatus().name()
+                        r.getStatus() != null ? r.getStatus().name() : "RESERVED"
                 ))
                 .toList();
     }
 
+    public List<ReservBookDto> getReturnedBooks(Long readerId) {
+        System.out.println("getReturnedBooks called with readerId: " + readerId);
+
+        if (readerId == null) {
+            return List.of();
+        }
+
+        // Use findByReaderIdWithRelations to fetch all relations
+        List<Reservation> allReservations = reservationRepo.findByReaderIdWithRelations(readerId);
+        System.out.println("Total reservations for readerId " + readerId + ": " + allReservations.size());
+
+        if (allReservations.isEmpty()) {
+            System.out.println("No reservations found for readerId: " + readerId);
+            return List.of();
+        }
+
+        List<Reservation> returnedReservations = allReservations.stream()
+                .filter(r -> {
+                    boolean isInactive = !r.isActive();
+                    System.out.println("Reservation ID: " + r.getId() + ", Active: " + r.isActive() + ", Status: " + r.getStatus());
+                    return isInactive;
+                })
+                .toList();
+
+        System.out.println("Returned (inactive) reservations: " + returnedReservations.size());
+
+        List<ReservBookDto> result = returnedReservations.stream()
+                .filter(r -> {
+                    boolean hasBookCopy = r.getBookCopy() != null;
+                    boolean hasBook = hasBookCopy && r.getBookCopy().getBook() != null;
+                    if (!hasBookCopy) {
+                        System.out.println("WARNING: Reservation " + r.getId() + " has no bookCopy");
+                    } else if (!hasBook) {
+                        System.out.println("WARNING: Reservation " + r.getId() + " has no book");
+                    }
+                    return hasBook;
+                })
+                .map(r -> {
+                    System.out.println("Processing reservation ID: " + r.getId() + ", Book: " + r.getBookCopy().getBook().getTitle());
+                    return new ReservBookDto(
+                            r.getId(),
+                            r.getBookCopy().getBook().getId(),
+                            r.getBookCopy().getBook().getTitle(),
+                            r.getBookCopy().getBook().getAuthor(),
+                            r.getBookCopy().getBook().getCoverUrl(),
+                            r.getReservationDate(),
+                            r.getStatus() != null ? r.getStatus().name() : "RETURNED"
+                    );
+                })
+                .toList();
+
+        System.out.println("Final result size: " + result.size());
+        return result;
+    }
+
 }
-
-
