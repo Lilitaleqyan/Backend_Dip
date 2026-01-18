@@ -1,10 +1,13 @@
 package org.example.backend_dip.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.example.backend_dip.entity.enums.Role;
+
+import java.util.List;
 
 
 @Entity
@@ -21,4 +24,8 @@ public class AdminForControl {
     private String email;
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JsonIgnore
+    List<BookComments> comments;
 }

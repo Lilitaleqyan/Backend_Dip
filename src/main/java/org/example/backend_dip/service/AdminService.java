@@ -1,18 +1,13 @@
 package org.example.backend_dip.service;
 
 
-import org.example.backend_dip.entity.Reservation;
+import org.example.backend_dip.entity.*;
 import org.example.backend_dip.entity.books.ReservBookDto;
-import org.example.backend_dip.entity.AdminForControl;
-import org.example.backend_dip.entity.BookReader;
-import org.example.backend_dip.entity.BookReaderForAdmin;
 import org.example.backend_dip.entity.books.Book;
 import org.example.backend_dip.entity.enums.Status;
-import org.example.backend_dip.repo.AdminRepo;
-import org.example.backend_dip.repo.BookReaderRepo;
-import org.example.backend_dip.repo.BookRepo;
-import org.example.backend_dip.repo.ReservationRepo;
+import org.example.backend_dip.repo.*;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -29,14 +24,16 @@ public class AdminService {
     private final BookReaderRepo bookReaderRepo;
     private final ReadersService readersService;
     private final ReservationRepo reservationRepo;
+    private final CommentRepo commentRepo;
 
 
-    public AdminService(AdminRepo adminRepo, BookRepo bookRepo, BookReaderRepo bookReaderRepo, ReadersService readersService, ReservationRepo reservationRepo) {
+    public AdminService(AdminRepo adminRepo, BookRepo bookRepo, BookReaderRepo bookReaderRepo, ReadersService readersService, ReservationRepo reservationRepo, CommentRepo commentRepo) {
         this.adminRepo = adminRepo;
         this.bookRepo = bookRepo;
         this.bookReaderRepo = bookReaderRepo;
         this.readersService = readersService;
         this.reservationRepo = reservationRepo;
+        this.commentRepo = commentRepo;
     }
 
     public boolean existsByUsername(String username) {
@@ -211,4 +208,24 @@ public class AdminService {
         return result;
     }
 
+    public Optional<Book> findBookById(long bookId) {
+       return bookRepo.findBookById(bookId);
+    }
+
+
+
+    public void addComment(BookComments bookComments) {
+        commentRepo.save(bookComments);
+    }
+
+
+
+    public Optional<AdminForControl> findAdminById(long readerId) {
+        return adminRepo.findAdminForControlById(readerId);
+    }
+
+    public AdminForControl getCurrentAdmin(Authentication authentication) {
+        String username = authentication.getName();
+        return  adminRepo.findByUsername(username).orElseThrow(() -> new RuntimeException("admin not found"));
+    }
 }

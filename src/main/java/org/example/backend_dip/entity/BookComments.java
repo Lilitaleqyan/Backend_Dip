@@ -25,8 +25,12 @@ public class BookComments {
     @ManyToOne
     BookReader bookReader;
 
+    @ManyToOne
+    AdminForControl admin;
+
     private String comment;
 
     private LocalDateTime creationDate;
+    private  String username;
 
 }

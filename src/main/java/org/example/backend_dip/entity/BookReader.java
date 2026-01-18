@@ -35,7 +35,7 @@ public class BookReader {
 
 
     @OneToMany(mappedBy = "bookReader", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private List<BookComments> bookList;
+    private List<BookComments> comments;
 
 
 }

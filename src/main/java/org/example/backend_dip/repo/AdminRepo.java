@@ -11,4 +11,8 @@ public interface AdminRepo extends JpaRepository<AdminForControl, Integer> {
     boolean existsByUsername(String username);
 
     Optional<AdminForControl> findByUsername(String username);
+
+    Optional<AdminForControl> findAdminForControlById(long adminId);
+
+    AdminForControl findById(long readerId);
 }

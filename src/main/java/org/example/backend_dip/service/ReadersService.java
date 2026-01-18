@@ -8,6 +8,7 @@ import org.example.backend_dip.repo.BookReaderRepo;
 import org.example.backend_dip.repo.BookRepo;
 import org.example.backend_dip.repo.CommentRepo;
 import org.example.backend_dip.repo.ReservationRepo;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -94,5 +95,10 @@ public class ReadersService {
                 readerId,
                 Status.RETURNED
         );
+    }
+
+    public BookReader getCurrentReader(Authentication authentication) {
+        String username = authentication.getName();
+        return repo.findByUsername(username).orElseThrow(() -> new RuntimeException("reader not found"));
     }
 }

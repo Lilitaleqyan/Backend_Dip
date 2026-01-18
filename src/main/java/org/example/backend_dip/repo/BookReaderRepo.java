@@ -53,4 +53,5 @@ public interface BookReaderRepo extends JpaRepository<BookReader, Long> {
     List<BookReader> findAllReadersWithRelations();
 
 
+    Optional<BookReader> findBookReaderById(long readerId);
 }
