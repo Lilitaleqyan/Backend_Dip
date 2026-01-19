@@ -22,16 +22,14 @@ public class AdminService {
     private final AdminRepo adminRepo;
     private final BookRepo bookRepo;
     private final BookReaderRepo bookReaderRepo;
-    private final ReadersService readersService;
     private final ReservationRepo reservationRepo;
     private final CommentRepo commentRepo;
 
 
-    public AdminService(AdminRepo adminRepo, BookRepo bookRepo, BookReaderRepo bookReaderRepo, ReadersService readersService, ReservationRepo reservationRepo, CommentRepo commentRepo) {
+    public AdminService(AdminRepo adminRepo, BookRepo bookRepo, BookReaderRepo bookReaderRepo, ReservationRepo reservationRepo, CommentRepo commentRepo) {
         this.adminRepo = adminRepo;
         this.bookRepo = bookRepo;
         this.bookReaderRepo = bookReaderRepo;
-        this.readersService = readersService;
         this.reservationRepo = reservationRepo;
         this.commentRepo = commentRepo;
     }
@@ -83,9 +81,6 @@ public class AdminService {
         bookReaderRepo.deleteById(id);
     }
 
-    public List<BookReader> getAllReaders() {
-        return bookReaderRepo.findAllReadersWithRelations();
-    }
 
     public List<BookReaderForAdmin> getAllReadersForAdmin() {
         List<BookReader> readers = bookReaderRepo.findAll();
@@ -94,13 +89,11 @@ public class AdminService {
         }
         return readers.stream()
                 .map(r -> {
-                    // AVAILABLE count is always 0 - reservations cannot be AVAILABLE
                     long availableCount = 0L;
-                    
-                    // Count active RESERVED reservations
+
+
                     long reservedCount = reservationRepo.countActiveReservedByReaderId(r.getId());
-                    
-                    // Count RETURNED reservations
+
                     long returnedCount = reservationRepo.countReturnedByReaderId(r.getId());
 
                     return BookReaderForAdmin.builder()
@@ -137,7 +130,6 @@ public class AdminService {
     }
 
 
-
     public List<ReservBookDto> getReservationBooks(Long readerId) {
         return reservationRepo.findActiveReservationsByReaderId(readerId)
                 .stream()
@@ -160,7 +152,6 @@ public class AdminService {
             return List.of();
         }
 
-        // Use findByReaderIdWithRelations to fetch all relations
         List<Reservation> allReservations = reservationRepo.findByReaderIdWithRelations(readerId);
         System.out.println("Total reservations for readerId " + readerId + ": " + allReservations.size());
 
@@ -209,9 +200,8 @@ public class AdminService {
     }
 
     public Optional<Book> findBookById(long bookId) {
-       return bookRepo.findBookById(bookId);
+        return bookRepo.findBookById(bookId);
     }
-
 
 
     public void addComment(BookComments bookComments) {
@@ -219,13 +209,8 @@ public class AdminService {
     }
 
 
-
-    public Optional<AdminForControl> findAdminById(long readerId) {
-        return adminRepo.findAdminForControlById(readerId);
-    }
-
     public AdminForControl getCurrentAdmin(Authentication authentication) {
         String username = authentication.getName();
-        return  adminRepo.findByUsername(username).orElseThrow(() -> new RuntimeException("admin not found"));
+        return adminRepo.findByUsername(username).orElseThrow(() -> new RuntimeException("admin not found"));
     }
 }

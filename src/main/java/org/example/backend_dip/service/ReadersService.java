@@ -19,19 +19,15 @@ public class ReadersService {
     private final BookReaderRepo repo;
     private final BookRepo bookRepo;
     private final CommentRepo commentRepo;
-    private final ReservationRepo reservationRepo;
 
-
-
-    public ReadersService(BookReaderRepo repo, BookRepo bookRepo, CommentRepo commentRepo, ReservationRepo reservationRepo) {
+    public ReadersService(BookReaderRepo repo, BookRepo bookRepo, CommentRepo commentRepo) {
         this.repo = repo;
         this.bookRepo = bookRepo;
         this.commentRepo = commentRepo;
-        this.reservationRepo = reservationRepo;
     }
 
     public BookReader save(BookReader reader) {
-          repo.save(reader);
+        repo.save(reader);
         return reader;
     }
 
@@ -44,7 +40,7 @@ public class ReadersService {
     }
 
     public Optional<Book> findBookById(long bookId) {
-       return bookRepo.findById(bookId);
+        return bookRepo.findById(bookId);
     }
 
 
@@ -53,7 +49,7 @@ public class ReadersService {
     }
 
     public boolean existsByUsernameAndEmail(String username, String email) {
-        return repo.existsByUsernameAndEmail(username,email);
+        return repo.existsByUsernameAndEmail(username, email);
     }
 
     public Optional<BookReader> findById(long readerId) {
@@ -61,10 +57,7 @@ public class ReadersService {
     }
 
     public BookReader update(BookReader updateReader) {
-//       if(repo.existsByUsernameAndEmail(updateReader.getUsername(), updateReader.getEmail())) {
-//           return new BookReader();
-//       };
-      return   repo.save(updateReader);
+        return repo.save(updateReader);
     }
 
     public boolean existsByUsername(String username) {
@@ -83,19 +76,6 @@ public class ReadersService {
         return repo.findByEmail(email);
     }
 
-    public long getReservedCount(Long readerId) {
-        return reservationRepo.countByReaderIdAndStatus(
-                readerId,
-                Status.RESERVED
-        );
-    }
-
-    public long getReturnedCount(Long readerId) {
-        return reservationRepo.countByReaderIdAndStatus(
-                readerId,
-                Status.RETURNED
-        );
-    }
 
     public BookReader getCurrentReader(Authentication authentication) {
         String username = authentication.getName();
