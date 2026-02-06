@@ -98,6 +98,8 @@ public class AdminController {
 
                 book = existBook.get();
                 book.setCount(book.getCount() + 1);
+                book.setFilePath(book.getFilePath());
+                book.setFileType(book.getFileType());
                 BookCopy copy = new BookCopy();
                 copy.setStatus(Status.AVAILABLE);
                 copy.setBook(book);
