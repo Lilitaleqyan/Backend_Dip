@@ -84,13 +84,13 @@ public class FullController {
             Authentication authentication
     ) {
         bookComments.setCreationDate(LocalDateTime.now());
+        BookReader reader = readerService.getCurrentReader(authentication);
 
-        if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equalsIgnoreCase("user"))) {
-            BookReader reader = readerService.getCurrentReader(authentication);
+        if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equalsIgnoreCase("ROLE_USER"))) {
             bookComments.setBook(readerService.findBookById(bookId).orElseThrow());
             bookComments.setBookReader(reader);
+            bookComments.setUsername(reader.getUsername());
             readerService.addComment(bookComments);
-
             return ResponseEntity.ok().build();
         }
 
@@ -98,6 +98,7 @@ public class FullController {
 
         bookComments.setBook(adminService.findBookById(bookId).orElseThrow());
         bookComments.setAdmin(admin);
+        bookComments.setUsername(admin.getUsername());
         adminService.addComment(bookComments);
 
         return ResponseEntity.ok().build();

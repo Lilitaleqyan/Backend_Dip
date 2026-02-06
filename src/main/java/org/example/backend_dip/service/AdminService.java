@@ -1,11 +1,11 @@
 package org.example.backend_dip.service;
 
-
 import org.example.backend_dip.entity.*;
 import org.example.backend_dip.entity.books.ReservBookDto;
 import org.example.backend_dip.entity.books.Book;
-import org.example.backend_dip.entity.enums.Status;
 import org.example.backend_dip.repo.*;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -24,6 +24,7 @@ public class AdminService {
     private final BookReaderRepo bookReaderRepo;
     private final ReservationRepo reservationRepo;
     private final CommentRepo commentRepo;
+    int count = 0;
 
 
     public AdminService(AdminRepo adminRepo, BookRepo bookRepo, BookReaderRepo bookReaderRepo, ReservationRepo reservationRepo, CommentRepo commentRepo) {
@@ -46,8 +47,9 @@ public class AdminService {
         adminRepo.save(admin);
     }
 
-    public Book addBook(Book book) {
-        return bookRepo.save(book);
+    public Book addBook(@NotNull Book book) {
+            return bookRepo.save(book);
+
     }
 
     public void removeBook(long id) throws IOException {
@@ -207,7 +209,6 @@ public class AdminService {
     public void addComment(BookComments bookComments) {
         commentRepo.save(bookComments);
     }
-
 
     public AdminForControl getCurrentAdmin(Authentication authentication) {
         String username = authentication.getName();

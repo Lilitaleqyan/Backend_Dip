@@ -1,21 +1,22 @@
 package org.example.backend_dip.entity;
 
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-@Getter
+import java.time.LocalDateTime;
 
+@Getter
 @RequiredArgsConstructor
 public class BookCommentsDto {
     private Long id;
     private String comment;
-    private String creationDate;
+    @JsonFormat(pattern = "dd/MM/yyyy HH:mm")
+    private LocalDateTime creationDate;
     private  String username;
-    private AdminForControl admin;
-    private BookReader reader;
 
-    public BookCommentsDto(Long id, String comment, String creationDate, String username) {
+
+    public BookCommentsDto(Long id, String comment, LocalDateTime creationDate, String username) {
         this.id = id;
         this.comment = comment;
         this.creationDate = creationDate;

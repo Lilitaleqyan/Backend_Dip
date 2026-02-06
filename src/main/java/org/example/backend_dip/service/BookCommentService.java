@@ -22,7 +22,7 @@ public class BookCommentService {
                 .map(c -> new BookCommentsDto(
                         c.getId(),
                         c.getComment(),
-                        c.getCreationDate().toString(),
+                        c.getCreationDate(),
                         c.getUsername()
                 ))
                 .collect(Collectors.toList());

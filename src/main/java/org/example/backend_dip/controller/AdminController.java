@@ -1,21 +1,22 @@
 package org.example.backend_dip.controller;
 
+import jakarta.transaction.Transactional;
 import org.example.backend_dip.entity.BookReader;
 import org.example.backend_dip.entity.BookReaderForAdmin;
-import org.example.backend_dip.entity.books.Book;
-import org.example.backend_dip.entity.books.BookCopy;
-import org.example.backend_dip.entity.books.BookDto;
-import org.example.backend_dip.entity.books.ReservBookDto;
+import org.example.backend_dip.entity.books.*;
 import org.example.backend_dip.entity.enums.Status;
+import org.example.backend_dip.repo.BookDtoForChatRepo;
 import org.example.backend_dip.repo.BookRepo;
 import org.example.backend_dip.service.AdminService;
 import org.example.backend_dip.service.BookCopyService;
 import org.example.backend_dip.service.ReadersService;
 import org.example.backend_dip.service.ReservService;
+import org.hibernate.dialect.lock.OptimisticEntityLockException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,12 +28,14 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/admin")
 public class AdminController {
 
+    int count = 0;
     @Value("${file.upload-dir}")
     private String uploadDir;
     private final AdminService adminService;
@@ -40,15 +43,18 @@ public class AdminController {
     private final BookRepo bookRepo;
     private final BookCopyService bookCopyService;
     private final ReservService reservService;
+    private final BookDtoForChatRepo bookDtoForChatRepo;
 
-    public AdminController(AdminService adminService, ReadersService readersService, BookRepo bookRepo, BookCopyService bookCopyService, ReservService reservService) {
+    public AdminController(AdminService adminService, ReadersService readersService, BookRepo bookRepo, BookCopyService bookCopyService, ReservService reservService, BookDtoForChatRepo bookDtoForChatRepo) {
         this.readersService = readersService;
         this.adminService = adminService;
         this.bookRepo = bookRepo;
         this.bookCopyService = bookCopyService;
         this.reservService = reservService;
+        this.bookDtoForChatRepo = bookDtoForChatRepo;
     }
 
+    @Transactional
     @PostMapping(path = "/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Book> addBook(@RequestPart("book") BookDto bookDto, @RequestPart(value = "file", required = false) MultipartFile file, @RequestPart(value = "audioFile", required = false) MultipartFile audioFile) {
 
@@ -85,8 +91,27 @@ public class AdminController {
                 bookEntity.setFilePath(filePath.toString());
                 bookEntity.setFileType(extension);
             }
-            bookEntity = adminService.addBook(bookEntity);
 
+            Optional<Book> existBook = bookRepo.findBookByAuthorAndTitleAndCategory(bookEntity.getAuthor(), bookEntity.getTitle(), bookEntity.getCategory());
+            Book book;
+            if (existBook.isPresent()) {
+
+                book = existBook.get();
+                book.setCount(book.getCount() + 1);
+                BookCopy copy = new BookCopy();
+                copy.setStatus(Status.AVAILABLE);
+                copy.setBook(book);
+                BookDtoForChat forChat = new BookDtoForChat();
+                forChat.setCount(book.getCount());
+                forChat.setAuthor(book.getAuthor());
+                forChat.setTitle(book.getTitle());
+                forChat.setId(book.getId());
+                bookDtoForChatRepo.save(forChat);
+                bookCopyService.save(copy);
+                return adminService.updateBook(book);
+
+            }
+            bookEntity = adminService.addBook(bookEntity);
 
             if (bookDto.getCategory().equalsIgnoreCase("audiobook") && audioFile != null && !audioFile.isEmpty()) {
 
@@ -96,7 +121,7 @@ public class AdminController {
 
                 String uniqueFileName = "audio" + bookEntity.getId() + "_" + audioFile.getOriginalFilename();
 
-                Path path = audioDir.resolve(uniqueFileName); // uploads/audio/audio<ID>_file.mp3
+                Path path = audioDir.resolve(uniqueFileName);
 
                 Files.copy(audioFile.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
 
@@ -104,7 +129,14 @@ public class AdminController {
                 bookEntity.setAudioUrl(fileUrl);
             }
 
+
             adminService.addBook(bookEntity);
+            BookDtoForChat bookDtoForChat = BookDtoForChat.builder()
+                    .id(bookEntity.getId())
+                    .title(bookEntity.getTitle())
+                    .author(bookEntity.getAuthor())
+                    .count(bookEntity.getCount()).build();
+            bookDtoForChatRepo.save(bookDtoForChat);
 
             BookCopy bookCopy = new BookCopy();
             bookCopy.setBook(bookEntity);
@@ -113,6 +145,10 @@ public class AdminController {
 
             return ResponseEntity.ok(bookEntity);
 
+
+        } catch (ObjectOptimisticLockingFailureException o) {
+            o.printStackTrace();
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
