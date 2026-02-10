@@ -84,9 +84,9 @@ public class FullController {
             Authentication authentication
     ) {
         bookComments.setCreationDate(LocalDateTime.now());
-        BookReader reader = readerService.getCurrentReader(authentication);
-
         if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equalsIgnoreCase("ROLE_USER"))) {
+            BookReader reader = readerService.getCurrentReader(authentication);
+
             bookComments.setBook(readerService.findBookById(bookId).orElseThrow());
             bookComments.setBookReader(reader);
             bookComments.setUsername(reader.getUsername());

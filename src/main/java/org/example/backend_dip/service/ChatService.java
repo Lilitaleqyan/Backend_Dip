@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
 import org.example.backend_dip.entity.books.BookCopy;
 import org.example.backend_dip.entity.books.BookDtoForChat;
+import org.example.backend_dip.entity.enums.Status;
 import org.example.backend_dip.repo.BookDtoForChatRepo;
 import org.example.backend_dip.repo.BookRepo;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,11 +37,16 @@ public class ChatService {
 
 
     public String sendMessage(String message) {
+
         List<BookDtoForChat> books = bookDtoForChatRepo.findAll();
+        Long count = 0L;
+
         StringBuilder booksListText = new StringBuilder();
         for (BookDtoForChat b : books) {
-            booksListText.append(String.format("- %s, հեղինակ: %s (ID: %d)\n",
-                    b.getTitle(), b.getAuthor(), b.getId(), b.getCount()));
+            booksListText.append("- ").append(b.getTitle()).append(", հեղինակ՝ ")
+                    .append(b.getAuthor()).append(" (").append(b.getCount()).append(" հատ)\n").append("Ազատ են ").append(b.getFreeCount())
+                    ;
+
         }
         MediaType mediaType = MediaType.parse("application/json; charset=utf-8");
         String systemPrompt = "Դու ԳրքաՊտույտ գրադարանի օգնականն ես: " +
@@ -48,7 +54,8 @@ public class ChatService {
                 "Եթե քեզ տան այլ հարցեր (օրինակ՝ խոհարարության, սպորտի, քաղաքականության մասին), " +
                 "քաղաքավարի պատասխանիր, որ դու կարող ես խոսել միայն գրքերի հետ կապված թեմաներից: " +
                 "Պատասխանիր միայն տրամադրված ցուցակի հիման վրա։ " + booksListText +
-                " Եթե գիրքը չկա ցուցակում, ասա, որ այն առկա չէ " +
+                " Եթե գիրքը չկա ցուցակում, ասա, որ այն առկա չէ, բայց մենք ունենք էլեկտրոնային տարբերակը և կարող է կարդալ այդ տարբերակով," +
+                "քանի որ մեր գրադարանը ունի հարուստ ֆունկցիոնալություն մեր օգտատերերին ապահովելու հասանելիություն մեր գրքերին ցանկացած տարբերակով " +
                 "Օգտատիրոջ հարցն է. ";
 
         String safeMessage = message.replace("\"", "\\\"");

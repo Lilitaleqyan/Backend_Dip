@@ -5,13 +5,8 @@ import org.example.backend_dip.entity.BookReader;
 import org.example.backend_dip.entity.BookReaderForAdmin;
 import org.example.backend_dip.entity.books.*;
 import org.example.backend_dip.entity.enums.Status;
-import org.example.backend_dip.repo.BookDtoForChatRepo;
 import org.example.backend_dip.repo.BookRepo;
-import org.example.backend_dip.service.AdminService;
-import org.example.backend_dip.service.BookCopyService;
-import org.example.backend_dip.service.ReadersService;
-import org.example.backend_dip.service.ReservService;
-import org.hibernate.dialect.lock.OptimisticEntityLockException;
+import org.example.backend_dip.service.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -43,15 +38,15 @@ public class AdminController {
     private final BookRepo bookRepo;
     private final BookCopyService bookCopyService;
     private final ReservService reservService;
-    private final BookDtoForChatRepo bookDtoForChatRepo;
+    private final BookDtoForChatService bookDtoForChatService;
 
-    public AdminController(AdminService adminService, ReadersService readersService, BookRepo bookRepo, BookCopyService bookCopyService, ReservService reservService, BookDtoForChatRepo bookDtoForChatRepo) {
+    public AdminController(AdminService adminService, ReadersService readersService, BookRepo bookRepo, BookCopyService bookCopyService, ReservService reservService, BookDtoForChatService bookDtoForChatService) {
         this.readersService = readersService;
         this.adminService = adminService;
         this.bookRepo = bookRepo;
         this.bookCopyService = bookCopyService;
         this.reservService = reservService;
-        this.bookDtoForChatRepo = bookDtoForChatRepo;
+        this.bookDtoForChatService = bookDtoForChatService;
     }
 
     @Transactional
@@ -92,7 +87,7 @@ public class AdminController {
                 bookEntity.setFileType(extension);
             }
 
-            Optional<Book> existBook = bookRepo.findBookByAuthorAndTitleAndCategory(bookEntity.getAuthor(), bookEntity.getTitle(), bookEntity.getCategory());
+            Optional<Book> existBook = bookRepo.findBookByAuthorAndTitle(bookEntity.getAuthor(), bookEntity.getTitle());
             Book book;
             if (existBook.isPresent()) {
 
@@ -103,14 +98,9 @@ public class AdminController {
                 BookCopy copy = new BookCopy();
                 copy.setStatus(Status.AVAILABLE);
                 copy.setBook(book);
-                BookDtoForChat forChat = new BookDtoForChat();
-                forChat.setCount(book.getCount());
-                forChat.setAuthor(book.getAuthor());
-                forChat.setTitle(book.getTitle());
-                forChat.setId(book.getId());
-                bookDtoForChatRepo.save(forChat);
                 bookCopyService.save(copy);
-                return adminService.updateBook(book);
+                bookDtoForChatService.updateCountBookDtoForChat(book);
+                return ResponseEntity.ok(book);
 
             }
             bookEntity = adminService.addBook(bookEntity);
@@ -131,19 +121,11 @@ public class AdminController {
                 bookEntity.setAudioUrl(fileUrl);
             }
 
-
-            adminService.addBook(bookEntity);
-            BookDtoForChat bookDtoForChat = BookDtoForChat.builder()
-                    .id(bookEntity.getId())
-                    .title(bookEntity.getTitle())
-                    .author(bookEntity.getAuthor())
-                    .count(bookEntity.getCount()).build();
-            bookDtoForChatRepo.save(bookDtoForChat);
-
             BookCopy bookCopy = new BookCopy();
             bookCopy.setBook(bookEntity);
             bookCopy.setStatus(Status.AVAILABLE);
             bookCopyService.save(bookCopy);
+            bookDtoForChatService.updateCountBookDtoForChat(bookEntity);
 
             return ResponseEntity.ok(bookEntity);
 

@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.example.backend_dip.entity.BookComments;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -64,6 +65,10 @@ public class Book {
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<BookComments> commentList;
+
+//    @OneToOne(mappedBy = "book", cascade = CascadeType.ALL)
+//    @JsonIgnore
+//   BookDtoForChat bookDtoForChat;
 
 }
 

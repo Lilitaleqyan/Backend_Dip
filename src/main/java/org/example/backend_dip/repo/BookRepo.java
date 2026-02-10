@@ -13,11 +13,5 @@ public interface BookRepo extends JpaRepository<Book, Long> {
 
     Optional<Book> findBookById(Long id);
 
-    boolean existsBookByAuthorAndTitle(String author, String title);
-
-    Book findBookByAuthorOrTitle(String author, String title);
-
-    boolean existsBookByAuthorAndTitleAndCategory(String author, String title, String category);
-
-    Optional<Book> findBookByAuthorAndTitleAndCategory(String author, String title, String category);
+    Optional<Book> findBookByAuthorAndTitle(String author, String title);
 }

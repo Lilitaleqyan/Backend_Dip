@@ -3,24 +3,30 @@ package org.example.backend_dip.service;
 import jakarta.transaction.Transactional;
 import org.example.backend_dip.entity.Reservation;
 import org.example.backend_dip.entity.books.BookCopy;
+import org.example.backend_dip.entity.books.BookDtoForChat;
 import org.example.backend_dip.entity.enums.Status;
 import org.example.backend_dip.repo.BookCopyRepo;
+import org.example.backend_dip.repo.BookDtoForChatRepo;
 import org.example.backend_dip.repo.BookReaderRepo;
 import org.example.backend_dip.repo.ReservationRepo;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 @Service
 public class ReservService {
     private final ReservationRepo reservationRepo;
     private final BookCopyRepo bookCopyRepo;
     private final BookReaderRepo bookReaderRepo;
+    private final BookDtoForChatRepo bookDtoForChatRepo;
 
-    public ReservService(ReservationRepo reservationRepo, BookCopyRepo bookCopyRepo, BookReaderRepo bookReaderRepo) {
+
+    public ReservService(ReservationRepo reservationRepo, BookCopyRepo bookCopyRepo, BookReaderRepo bookReaderRepo, BookDtoForChatRepo bookDtoForChatRepo) {
         this.reservationRepo = reservationRepo;
         this.bookCopyRepo = bookCopyRepo;
         this.bookReaderRepo = bookReaderRepo;
+        this.bookDtoForChatRepo = bookDtoForChatRepo;
     }
 
     @Transactional
@@ -38,9 +44,10 @@ public class ReservService {
         }
 
         BookCopy bookCopy = bookCopyRepo.findFirstByBookIdAndStatus(bookId, Status.AVAILABLE).or(() -> bookCopyRepo.findFirstByBookIdAndStatus(bookId, Status.RETURNED)).orElseThrow(() -> new RuntimeException("No available book copy found"));
-
         bookCopy.setStatus(Status.RESERVED);
         bookCopyRepo.save(bookCopy);
+        Optional<BookDtoForChat> bookDtoForChat = bookDtoForChatRepo.findBookDtoForChatByAuthorAndTitle(bookCopy.getBook().getAuthor(), bookCopy.getBook().getTitle());
+        bookDtoForChat.ifPresent(bookDto -> bookDto.setFreeCount(bookDto.getFreeCount() - 1));
 
         Reservation reservation = Reservation.builder().reader(bookReaderRepo.findById(readerId).orElseThrow(() -> new RuntimeException("Reader not found"))).bookCopy(bookCopy).reservationDate(LocalDate.now()).returnDate(LocalDate.now().plusDays(10)).active(true).status(Status.RESERVED).build();
         reservationRepo.save(reservation);
@@ -69,9 +76,13 @@ public class ReservService {
         }
 
         bookCopy.setStatus(Status.AVAILABLE);
+        Optional<BookDtoForChat> bookDtoForChat = bookDtoForChatRepo.findBookDtoForChatByAuthorAndTitle(bookCopy.getBook().getAuthor(), bookCopy.getBook().getTitle());
+        bookDtoForChat.ifPresent(bookDto -> bookDto.setFreeCount(bookDto.getFreeCount() + 1));
 
         reservationRepo.save(reservation);
         bookCopyRepo.save(bookCopy);
+
+
     }
 
     public boolean existsByReaderId(long readerId) {

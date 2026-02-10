@@ -10,6 +10,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.example.backend_dip.entity.enums.Status;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -34,5 +37,6 @@ public class BookCopy {
 
     @Enumerated(EnumType.STRING)
     private Status status;
+
 
 }
