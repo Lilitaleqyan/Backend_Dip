@@ -81,4 +81,8 @@ public class ReadersService {
         String username = authentication.getName();
         return repo.findByUsername(username).orElseThrow(() -> new RuntimeException("reader not found"));
     }
+
+    public Optional<BookReader> findBookReaderByResetToken(String token) {
+        return repo.findByResetToken(token);
+    }
 }

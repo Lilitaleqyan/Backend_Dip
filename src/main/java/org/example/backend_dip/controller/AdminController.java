@@ -118,6 +118,7 @@ public class AdminController {
                 Files.copy(audioFile.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
 
                 String fileUrl = "/uploads/audio/" + uniqueFileName;
+                System.out.println(fileUrl);
                 bookEntity.setAudioUrl(fileUrl);
             }
 

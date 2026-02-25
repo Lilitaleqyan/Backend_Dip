@@ -5,6 +5,7 @@ import org.example.backend_dip.entity.BookReaderForAdmin;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -54,4 +55,8 @@ public interface BookReaderRepo extends JpaRepository<BookReader, Long> {
 
 
     Optional<BookReader> findBookReaderById(long readerId);
+
+    // Find reader by reset token (explicit JPQL to avoid naming issues)
+    @Query("SELECT r FROM BookReader r WHERE r.resetToken = :resetToken")
+    Optional<BookReader> findByResetToken(@Param("resetToken") String resetToken);
 }

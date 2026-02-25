@@ -79,11 +79,13 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
 //        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration configuration = new CorsConfiguration();
-//        configuration.addAllowedOriginPattern("*");
-        configuration.setAllowedOrigins(List.of("http://localhost:5000"));
+        // Allow both localhost and 127.0.0.1 for the frontend dev server
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:5000",
+                "http://127.0.0.1:5000"
+        ));
 
         configuration.setAllowCredentials(true);
-//        configuration.addAllowedOrigin("*");
         configuration.addAllowedHeader("*");
         configuration.addAllowedMethod("*");
 //        for (String origin : allowedOrigins.split(",")) {

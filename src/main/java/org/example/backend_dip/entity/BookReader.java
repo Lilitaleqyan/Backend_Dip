@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.example.backend_dip.entity.enums.Role;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -25,6 +26,9 @@ public class BookReader {
     @Column(name = "user_name")
     private String username;
     private String password;
+
+    private String resetToken;
+    private LocalDateTime resetTokenExpiry;
 
     @Enumerated(EnumType.STRING)
     private Role role;

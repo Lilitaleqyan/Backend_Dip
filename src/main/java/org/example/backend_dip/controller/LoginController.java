@@ -11,6 +11,7 @@ import org.example.backend_dip.entity.requestOrresponse.AuthResponse;
 import org.example.backend_dip.repo.BookReaderRepo;
 import org.example.backend_dip.security.JwtUtil;
 import org.example.backend_dip.service.AdminService;
+import org.example.backend_dip.service.EmailService;
 import org.example.backend_dip.service.MyUserDetailsService;
 import org.example.backend_dip.service.ReadersService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -38,14 +40,17 @@ public class LoginController {
     private final PasswordEncoder passwordEncoder;
     private final ReadersService readerService;
     private final AdminService adminService;
+    private final EmailService emailService;
 
-    public LoginController(JwtUtil jwtUtil, AuthenticationManager authenticationManager, MyUserDetailsService userDetailsService, PasswordEncoder passwordEncoder, ReadersService readerService, AdminService adminService) {
+
+    public LoginController(JwtUtil jwtUtil, AuthenticationManager authenticationManager, MyUserDetailsService userDetailsService, PasswordEncoder passwordEncoder, ReadersService readerService, AdminService adminService, EmailService emailService) {
         this.jwtUtil = jwtUtil;
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
         this.readerService = readerService;
         this.adminService = adminService;
+        this.emailService = emailService;
     }
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody BookReader bookReader) {
@@ -65,6 +70,7 @@ public class LoginController {
         response.put("firstName", savedReader.getFirstName());
         response.put("lastName", savedReader.getLastName());
         response.put("role", savedReader.getRole());
+
 
         return ResponseEntity.ok(response);
     }
@@ -112,6 +118,49 @@ public class LoginController {
         }
         return "Log out successfully";
     }
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
+
+        String email = request.get("email");
+
+        BookReader user = readerService.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String token = UUID.randomUUID().toString();
+
+        user.setResetToken(token);
+        user.setResetTokenExpiry(LocalDateTime.now().plusHours(1));
+        readerService.save(user);
+
+        String resetLink = "http://localhost:5000/reset-password?token=" + token;
+
+        emailService.sendResetEmail(
+                email,
+                resetLink
+        );
+
+        return ResponseEntity.ok(Map.of("message", "Password updated"));    }
 
 
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
+
+        String token = request.get("token");
+        String newPassword = request.get("password");
+        System.out.println("RESET TOKEN SAVED FOR " + ": " + token);
+        BookReader user = readerService.findBookReaderByResetToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid token"));
+
+        if (user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
+            return ResponseEntity.badRequest().body("Token expired");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setResetToken(null);
+        user.setResetTokenExpiry(null);
+
+        readerService.save(user);
+
+        return ResponseEntity.ok("Password updated");
+    }
 }
