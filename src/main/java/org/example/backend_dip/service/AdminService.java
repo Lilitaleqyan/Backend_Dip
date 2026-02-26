@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
@@ -64,7 +65,7 @@ public class AdminService {
                 && book.getAudioUrl() != null
                 && !book.getAudioUrl().isBlank()) {
 
-            Path audioPath = Path.of("/home/user/Backend_Dip/" + book.getAudioUrl());
+            Path audioPath = Path.of("/home/user/IdeaProjects/Backend_Dip/" + book.getAudioUrl());
 
             System.out.println("Deleting audio: " + audioPath);
 
@@ -214,4 +215,27 @@ public class AdminService {
         String username = authentication.getName();
         return adminRepo.findByUsername(username).orElseThrow(() -> new RuntimeException("admin not found"));
     }
+
+    public void deleteFilePath(String filePath) {
+        if (filePath == null) return;
+
+        try {
+            Path path = Paths.get(filePath);
+            Files.deleteIfExists(path);
+        } catch (IOException e) {
+            System.out.println("Could not delete file: " + filePath);
+        }
+
+    }
+      public void deleteAudioUrl(String url) {
+            if (url == null) return;
+            try {
+                Path path = Paths.get(url);
+                Files.deleteIfExists(path);
+            }
+            catch (IOException e) {
+                System.out.println("Could not delete file: " + url);
+            }
+        }
+
 }

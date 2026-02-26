@@ -15,4 +15,5 @@ public interface AdminRepo extends JpaRepository<AdminForControl, Integer> {
     Optional<AdminForControl> findAdminForControlById(long adminId);
 
     AdminForControl findById(long readerId);
+
 }

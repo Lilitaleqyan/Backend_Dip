@@ -173,6 +173,9 @@ public class AdminController {
                                         @RequestPart(value = "file", required = false) MultipartFile multipartFile,
                                         @RequestPart(value = "audioFile", required = false) MultipartFile audioFile) {
         return bookRepo.findBookById(id).map(existingBook -> {
+//        adminService.deleteFilePath(existingBook.getFilePath());
+
+
             try {
                 existingBook.setTitle(bookDto.getTitle());
                 existingBook.setAuthor(bookDto.getAuthor());
@@ -181,7 +184,7 @@ public class AdminController {
                 existingBook.setPages(bookDto.getPages());
                 existingBook.setCoverUrl(bookDto.getCoverUrl());
                 existingBook.setFileType(bookDto.getFileType());
-                existingBook.setFilePath(bookDto.getFilePath());
+//                existingBook.setFilePath(bookDto.getFilePath());
 //               existingBook.setAudioUrl(bookDto.getAudioUrl());
                 existingBook.setNarrator(bookDto.getNarrator());
                 existingBook.setDuration(bookDto.getDuration());
@@ -198,6 +201,9 @@ public class AdminController {
 
                     Path path = Paths.get(filePath);
                     Files.write(path, multipartFile.getBytes());
+                    if (existingBook.getFilePath() != null) {
+                        adminService.deleteFilePath(existingBook.getFilePath());
+                    }
 
                     existingBook.setFileType(extension);
                     existingBook.setFilePath(filePath);
@@ -215,8 +221,13 @@ public class AdminController {
                     Files.copy(audioFile.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
 
                     String fileUrl = "/uploads/audio/" + uniqueFileName;
+
+                    if (existingBook.getAudioUrl() != null) {
+                        adminService.deleteAudioUrl(existingBook.getAudioUrl());
+                    }
                     existingBook.setAudioUrl(fileUrl);
                 }
+                System.out.println(existingBook.getFilePath());
 
 
                 return ResponseEntity.ok(adminService.updateBook(existingBook));
