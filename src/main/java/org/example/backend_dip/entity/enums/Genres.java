@@ -4,5 +4,5 @@ public enum Genres {
     FANTASY,
     DETECTIVE,
     NOVEL,
-    BIOGRAPHY,
+    BIOGRAPHY
 }

@@ -66,6 +66,10 @@ public class Book {
     @JsonIgnore
     private List<BookComments> commentList;
 
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<BookDtoForChat> chats;
+
 //    @OneToOne(mappedBy = "book", cascade = CascadeType.ALL)
 //    @JsonIgnore
 //   BookDtoForChat bookDtoForChat;

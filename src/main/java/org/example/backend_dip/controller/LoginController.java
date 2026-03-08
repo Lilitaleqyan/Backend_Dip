@@ -5,10 +5,12 @@ import jakarta.servlet.http.HttpSession;
 import org.example.backend_dip.entity.AdminForControl;
 import org.example.backend_dip.entity.BookComments;
 import org.example.backend_dip.entity.BookReader;
+import org.example.backend_dip.entity.books.Subscription;
 import org.example.backend_dip.entity.enums.Role;
 import org.example.backend_dip.entity.requestOrresponse.AuthRequest;
 import org.example.backend_dip.entity.requestOrresponse.AuthResponse;
 import org.example.backend_dip.repo.BookReaderRepo;
+import org.example.backend_dip.repo.SubscriptionRepository;
 import org.example.backend_dip.security.JwtUtil;
 import org.example.backend_dip.service.AdminService;
 import org.example.backend_dip.service.EmailService;
@@ -41,9 +43,14 @@ public class LoginController {
     private final ReadersService readerService;
     private final AdminService adminService;
     private final EmailService emailService;
+    private final SubscriptionRepository subscriptionRepository;
 
 
-    public LoginController(JwtUtil jwtUtil, AuthenticationManager authenticationManager, MyUserDetailsService userDetailsService, PasswordEncoder passwordEncoder, ReadersService readerService, AdminService adminService, EmailService emailService) {
+
+    public LoginController(JwtUtil jwtUtil, AuthenticationManager authenticationManager,
+                           MyUserDetailsService userDetailsService, PasswordEncoder passwordEncoder, ReadersService readerService,
+                           AdminService adminService, EmailService emailService,
+                           SubscriptionRepository subscriptionRepository) {
         this.jwtUtil = jwtUtil;
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
@@ -51,6 +58,7 @@ public class LoginController {
         this.readerService = readerService;
         this.adminService = adminService;
         this.emailService = emailService;
+        this.subscriptionRepository = subscriptionRepository;
     }
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody BookReader bookReader) {
@@ -63,6 +71,7 @@ public class LoginController {
 
         BookReader savedReader = readerService.save(bookReader);
 
+
         Map<String, Object> response = new HashMap<>();
         response.put("id", savedReader.getId());
         response.put("username", savedReader.getUsername());
@@ -71,6 +80,10 @@ public class LoginController {
         response.put("lastName", savedReader.getLastName());
         response.put("role", savedReader.getRole());
 
+        Subscription subscription = new Subscription();
+        subscription.setEmail(bookReader.getEmail());
+
+        subscriptionRepository.save(subscription);
 
         return ResponseEntity.ok(response);
     }

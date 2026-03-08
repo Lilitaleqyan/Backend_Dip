@@ -1,6 +1,8 @@
 package org.example.backend_dip.service;
 
+import jakarta.transaction.Transactional;
 import org.example.backend_dip.entity.*;
+import org.example.backend_dip.entity.books.BookDtoForChat;
 import org.example.backend_dip.entity.books.ReservBookDto;
 import org.example.backend_dip.entity.books.Book;
 import org.example.backend_dip.repo.*;
@@ -25,15 +27,18 @@ public class AdminService {
     private final BookReaderRepo bookReaderRepo;
     private final ReservationRepo reservationRepo;
     private final CommentRepo commentRepo;
+    private  final BookDtoForChatService bookDtoForChatService;
+
     int count = 0;
 
 
-    public AdminService(AdminRepo adminRepo, BookRepo bookRepo, BookReaderRepo bookReaderRepo, ReservationRepo reservationRepo, CommentRepo commentRepo) {
+    public AdminService(AdminRepo adminRepo, BookRepo bookRepo, BookReaderRepo bookReaderRepo, ReservationRepo reservationRepo, CommentRepo commentRepo, BookDtoForChatService bookDtoForChatService) {
         this.adminRepo = adminRepo;
         this.bookRepo = bookRepo;
         this.bookReaderRepo = bookReaderRepo;
         this.reservationRepo = reservationRepo;
         this.commentRepo = commentRepo;
+        this.bookDtoForChatService=bookDtoForChatService;
     }
 
     public boolean existsByUsername(String username) {
@@ -53,6 +58,7 @@ public class AdminService {
 
     }
 
+    @Transactional
     public void removeBook(long id) throws IOException {
         Book book = bookRepo.findById(id).orElseThrow(() -> new RuntimeException("file not found"));
         Path path = Path.of(book.getFilePath());
@@ -72,7 +78,8 @@ public class AdminService {
             Files.deleteIfExists(audioPath);
         }
         bookRepo.deleteById(id);
-
+        bookDtoForChatService.findBookDtoForChatById(id)
+                .ifPresent(b -> bookDtoForChatService.removeBook(id));
 
     }
 

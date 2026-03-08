@@ -1,11 +1,15 @@
 package org.example.backend_dip.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.backend_dip.entity.books.Book;
 import org.example.backend_dip.entity.enums.Role;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -41,5 +45,9 @@ public class BookReader {
     @OneToMany(mappedBy = "bookReader", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<BookComments> comments;
 
+    @ManyToMany
+    @JoinTable
+    @JsonIgnore
+    private Set<Book> favoriteBooks = new HashSet<>();
 
 }

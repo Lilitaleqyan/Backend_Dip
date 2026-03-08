@@ -72,6 +72,13 @@ public class ReadersService {
         return repo.findByUsername(username);
     }
 
+    public BookReader findReaderByUsername(String userName) {
+        return repo.findByUsername(userName).get();
+    }
+    public Optional<BookReader> findByUsernameWithFavorites(String username) {
+        return repo.findByUsernameWithFavorites(username);
+    }
+
     public Optional<BookReader> findByEmail(String email) {
         return repo.findByEmail(email);
     }

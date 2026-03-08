@@ -32,9 +32,21 @@ public class BookDtoForChatService {
                     .author(book.getAuthor())
                     .count(1)
                     .freeCount(1)
+                    .book(book)
                     .build();
             bookDtoForChatRepo.save(bookDtoForChat1);
         }
 
+    }
+    public  void removeBook(Long id) {
+        bookDtoForChatRepo.deleteById(id);
+    }
+
+    public Optional<BookDtoForChat>findBookDtoForChatById(Long id) {
+       return bookDtoForChatRepo.findBookDtoForChatById(id);
+    }
+
+    public BookDtoForChat save(BookDtoForChat book) {
+        return bookDtoForChatRepo.save(book);
     }
 }

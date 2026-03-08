@@ -31,6 +31,9 @@ public interface BookReaderRepo extends JpaRepository<BookReader, Long> {
 
     boolean existsByEmail(String email);
 
+    @Query("SELECT r FROM BookReader r LEFT JOIN FETCH r.favoriteBooks WHERE r.username = :username")
+    Optional<BookReader> findByUsernameWithFavorites(@Param("username") String username);
+
 //
 //    @Query("""
 //    SELECT new org.example.backend_dip.entity.BookReaderForAdmin(

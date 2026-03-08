@@ -28,7 +28,7 @@ public interface BookDtoForChatRepo extends JpaRepository<BookDtoForChat, Long> 
     Optional<BookDtoForChat> findBookDtoForChatByAuthorAndTitle(String author, String title);
 
 //    Optional<BookDtoForChat> findByBook(Book book);
+    Optional<BookDtoForChat> findByBookId(Long id);
 
-
-
+     Optional<BookDtoForChat>findBookDtoForChatById(Long id);
 }

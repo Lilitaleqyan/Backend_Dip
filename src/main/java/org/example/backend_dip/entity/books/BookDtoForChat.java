@@ -19,8 +19,6 @@ public class BookDtoForChat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-//    @OneToOne
-//    Book book;
     @Column
     private String title;
     @Column
@@ -30,4 +28,7 @@ public class BookDtoForChat {
     @Column
     private int freeCount;
 
+    @ManyToOne
+    @JoinColumn
+    private Book book;
 }

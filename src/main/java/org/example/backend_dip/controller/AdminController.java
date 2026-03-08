@@ -5,6 +5,7 @@ import org.example.backend_dip.entity.BookReader;
 import org.example.backend_dip.entity.BookReaderForAdmin;
 import org.example.backend_dip.entity.books.*;
 import org.example.backend_dip.entity.enums.Status;
+import org.example.backend_dip.repo.BookDtoForChatRepo;
 import org.example.backend_dip.repo.BookRepo;
 import org.example.backend_dip.service.*;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,14 +40,17 @@ public class AdminController {
     private final BookCopyService bookCopyService;
     private final ReservService reservService;
     private final BookDtoForChatService bookDtoForChatService;
-
-    public AdminController(AdminService adminService, ReadersService readersService, BookRepo bookRepo, BookCopyService bookCopyService, ReservService reservService, BookDtoForChatService bookDtoForChatService) {
+    private final BookDtoForChatRepo bookDtoForChatRepository;
+    private final EmailService emailService;
+    public AdminController(AdminService adminService, ReadersService readersService, BookRepo bookRepo, BookCopyService bookCopyService, ReservService reservService, BookDtoForChatService bookDtoForChatService, BookDtoForChatRepo bookDtoForChatRepository, EmailService emailService) {
         this.readersService = readersService;
         this.adminService = adminService;
         this.bookRepo = bookRepo;
         this.bookCopyService = bookCopyService;
         this.reservService = reservService;
         this.bookDtoForChatService = bookDtoForChatService;
+        this.bookDtoForChatRepository = bookDtoForChatRepository;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -99,10 +103,12 @@ public class AdminController {
                 copy.setStatus(Status.AVAILABLE);
                 copy.setBook(book);
                 bookCopyService.save(copy);
+
                 bookDtoForChatService.updateCountBookDtoForChat(book);
                 return ResponseEntity.ok(book);
 
             }
+
             bookEntity = adminService.addBook(bookEntity);
 
             if (bookDto.getCategory().equalsIgnoreCase("audiobook") && audioFile != null && !audioFile.isEmpty()) {
@@ -121,11 +127,14 @@ public class AdminController {
                 System.out.println(fileUrl);
                 bookEntity.setAudioUrl(fileUrl);
             }
+            emailService.sendNewBookNotification(bookEntity.getTitle());
+
 
             BookCopy bookCopy = new BookCopy();
             bookCopy.setBook(bookEntity);
             bookCopy.setStatus(Status.AVAILABLE);
             bookCopyService.save(bookCopy);
+
             bookDtoForChatService.updateCountBookDtoForChat(bookEntity);
 
             return ResponseEntity.ok(bookEntity);
@@ -228,8 +237,14 @@ public class AdminController {
                     existingBook.setAudioUrl(fileUrl);
                 }
                 System.out.println(existingBook.getFilePath());
-
-
+              bookDtoForChatRepository.findByBookId(id).map(bookDtoForChat -> {
+                    bookDtoForChat.setAuthor(existingBook.getAuthor());
+                    bookDtoForChat.setTitle(existingBook.getTitle());
+                    bookDtoForChat.setCount(existingBook.getCount());
+                    bookDtoForChat.setBook(existingBook);
+                    bookDtoForChat.setFreeCount(bookDtoForChat.getFreeCount());
+                    return ResponseEntity.ok(bookDtoForChatService.save(bookDtoForChat));
+                        });
                 return ResponseEntity.ok(adminService.updateBook(existingBook));
 
             } catch (Exception e) {
@@ -245,6 +260,8 @@ public class AdminController {
         List<Book> books = adminService.findBookByAuthorOrTitle(author, title);
         return ResponseEntity.ok(books);
     }
+
+
 
     @GetMapping("/findReader")
     public ResponseEntity<List<BookReader>> findReaderBy(@RequestParam(required = false) String email, @RequestParam(required = false) String firstName, @RequestParam(required = false) String lastName, @RequestParam(required = false) String username) {

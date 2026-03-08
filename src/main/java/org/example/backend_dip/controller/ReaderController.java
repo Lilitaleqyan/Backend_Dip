@@ -1,19 +1,26 @@
 package org.example.backend_dip.controller;
 
+import jakarta.transaction.Transactional;
 import org.example.backend_dip.entity.BookComments;
 import org.example.backend_dip.entity.BookReader;
 import org.example.backend_dip.entity.books.Book;
 import org.example.backend_dip.entity.books.BookCopy;
+import org.example.backend_dip.entity.books.BookDto;
 import org.example.backend_dip.repo.BookRepo;
+import org.example.backend_dip.service.EmailService;
 import org.example.backend_dip.service.ReadersService;
 import org.example.backend_dip.service.ReservService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailSender;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/reader")
@@ -21,10 +28,14 @@ public class ReaderController {
     private final ReadersService service;
     private final ReservService reservService;
     private final BookRepo bookRepo;
-    public ReaderController(ReadersService service, ReservService reservService, BookRepo bookRepo) {
+    private  final MailSender mailSender;
+    private final EmailService emailService;
+    public ReaderController(ReadersService service, ReservService reservService, BookRepo bookRepo, MailSender mailSender, EmailService emailService) {
         this.service = service;
         this.reservService = reservService;
         this.bookRepo = bookRepo;
+        this.mailSender = mailSender;
+        this.emailService = emailService;
     }
 
     @GetMapping("/findBook")
@@ -92,5 +103,46 @@ public class ReaderController {
     public ResponseEntity<List<Book>> getBooks() {
         List<Book> books = bookRepo.findAll();
         return ResponseEntity.ok(books);
+    }
+
+    @Transactional
+    @GetMapping("/findFavoritesBook")
+    public ResponseEntity<Set<Book>> getFavoritesBook(Principal principal) {
+           BookReader bookReader = service.findByUsernameWithFavorites(principal.getName()).orElseThrow(()-> new RuntimeException("Օգտատերը չի գտնվել"));
+           return ResponseEntity.ok(bookReader.getFavoriteBooks());
+
+    }
+
+    @PostMapping("/sendMassageForAdmin")
+    public String sendMassageForAdmin(@RequestBody Map<String, String> body) {
+        String message = body.get("message");
+        emailService.sendMessageForAdmin(message);
+        return "Message sent";
+    }
+
+    @Transactional
+    @PostMapping("/{bookId}/favorite")
+    public ResponseEntity<?> addFavorites(@PathVariable("bookId") Long bookId, Principal principal) {
+       BookReader bookReader = service.findReaderByUsername(principal.getName());
+        Book book = bookRepo.findBookById(bookId).orElseThrow();
+
+        if (bookReader.getFavoriteBooks().contains(book)) {
+           bookReader.getFavoriteBooks().remove(book);
+        }
+
+            bookReader.getFavoriteBooks().add(book);
+        service.save(bookReader);
+        return ResponseEntity.ok().build();
+    }
+    @Transactional
+    @DeleteMapping("/{bookId}/unFavorite")
+    public ResponseEntity<?> removeFavorites(@PathVariable("bookId") Long bookId, Principal principal) {
+        Book newBook = service.findBookById(bookId).orElseThrow();
+        BookReader bookReader = service.findReaderByUsername(principal.getName());
+        if (bookReader.getFavoriteBooks().contains(newBook)) {
+            bookReader.getFavoriteBooks().remove(newBook);
+        }
+       return ResponseEntity.ok().build();
+
     }
 }
