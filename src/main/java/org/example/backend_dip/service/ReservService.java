@@ -10,9 +10,11 @@ import org.example.backend_dip.repo.BookDtoForChatRepo;
 import org.example.backend_dip.repo.BookReaderRepo;
 import org.example.backend_dip.repo.ReservationRepo;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import java.time.LocalDate;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ReservService {
@@ -89,6 +91,22 @@ public class ReservService {
         return reservationRepo.existsByReaderId(readerId);
     }
 
+
+    public List<Map<String, LocalDate>> getBookReservationDate(Long bookId) {
+        long copeCount  = bookCopyRepo.countBookCopiesById(bookId);
+        List<Reservation> activeReservationCount = reservationRepo.findActiveReservationByBookId(bookId);
+
+            if (activeReservationCount.size() >= copeCount) {
+                    return activeReservationCount.stream()
+                            .map(res -> {
+                                Map<String, LocalDate> range = new HashMap<>();
+                                range.put("from",res.getReservationDate());
+                                range.put("to",res.getReturnDate());
+                                return range;
+                            }).collect(Collectors.toList());
+            }
+            return Collections.emptyList();
+    }
 
 }
 

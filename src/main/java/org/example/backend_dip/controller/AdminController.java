@@ -69,7 +69,8 @@ public class AdminController {
                     .coverUrl(bookDto.getCoverUrl())
 //                    .audioUrl(bookDto.getAudioUrl())
                     .narrator(bookDto.getNarrator())
-                    .duration(bookDto.getDuration()).
+                    .duration(bookDto.getDuration())
+                            .count(bookDto.getCount()+1).
                     build();
 
             if (file != null && !file.isEmpty()) {

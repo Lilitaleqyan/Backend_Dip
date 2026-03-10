@@ -70,4 +70,8 @@ public interface ReservationRepo extends JpaRepository<Reservation, Long> {
     long countReturnedByReaderId(@Param("readerId") Long readerId);
 
 
+    @Query("SELECT r FROM Reservation r WHERE r.bookCopy.book.id = :bookId " +
+            "AND r.status = org.example.backend_dip.entity.enums.Status.RESERVED")
+    List<Reservation> findActiveReservationByBookId(@Param("bookId") Long bookId);
+//    List <Reservation> findReservationByBookCopy_Id(@Param("bookId") Long bookId);
 }

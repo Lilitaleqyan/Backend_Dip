@@ -16,6 +16,7 @@ import org.springframework.mail.MailSender;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +61,12 @@ public class ReaderController {
                     .body(e.getMessage());
         }
     }
+
+@GetMapping("/{bookId}/reserved-dates")
+public ResponseEntity<List<Map<String, LocalDate>>> getReservedDates(@PathVariable("bookId") Long bookId) {
+        List<Map<String, LocalDate>> getReservedDates = reservService.getBookReservationDate(bookId);
+        return ResponseEntity.ok(getReservedDates);
+}
 
 
     @PostMapping("/addComment")

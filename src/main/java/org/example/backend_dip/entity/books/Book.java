@@ -53,7 +53,7 @@ public class Book {
     private String filePath;
 
     @Column
-    private int count;
+    private int count ;
 
 //    @Enumerated(EnumType.STRING)
 //    private String genre;
