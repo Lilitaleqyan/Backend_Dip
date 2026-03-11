@@ -1,5 +1,6 @@
 package org.example.backend_dip.service;
 
+import jakarta.transaction.Transactional;
 import org.example.backend_dip.entity.BookComments;
 import org.example.backend_dip.entity.BookReader;
 import org.example.backend_dip.entity.books.Book;
@@ -77,6 +78,10 @@ public class ReadersService {
     }
     public Optional<BookReader> findByUsernameWithFavorites(String username) {
         return repo.findByUsernameWithFavorites(username);
+    }
+
+    public Optional<BookReader> findByReader_idWithReservationsHistory(Long id) {
+        return repo.findByReader_idWithReservationsHistory(id);
     }
 
     public Optional<BookReader> findByEmail(String email) {

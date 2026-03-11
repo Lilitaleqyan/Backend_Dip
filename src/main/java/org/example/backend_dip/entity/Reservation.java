@@ -1,5 +1,7 @@
 package org.example.backend_dip.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.backend_dip.entity.books.BookCopy;
@@ -19,6 +21,8 @@ public class Reservation {
     private long id;
 
     @ManyToOne
+    @JoinColumn(name = "reader_id")
+     @JsonIgnore
     BookReader reader;
 
     @ManyToOne

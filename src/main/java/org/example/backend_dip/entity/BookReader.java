@@ -1,6 +1,7 @@
 package org.example.backend_dip.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.backend_dip.entity.books.Book;
@@ -39,6 +40,7 @@ public class BookReader {
 
 
     @OneToMany(mappedBy = "reader", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Reservation> bookRelations;
 
 
@@ -49,5 +51,9 @@ public class BookReader {
     @JoinTable
     @JsonIgnore
     private Set<Book> favoriteBooks = new HashSet<>();
+
+    @OneToMany(mappedBy = "reader")
+    @JsonIgnoreProperties("reservation")
+    private Set<Reservation> reservations = new HashSet<>();
 
 }

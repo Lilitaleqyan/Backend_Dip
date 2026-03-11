@@ -3,9 +3,8 @@ package org.example.backend_dip.controller;
 import jakarta.transaction.Transactional;
 import org.example.backend_dip.entity.BookComments;
 import org.example.backend_dip.entity.BookReader;
+import org.example.backend_dip.entity.Reservation;
 import org.example.backend_dip.entity.books.Book;
-import org.example.backend_dip.entity.books.BookCopy;
-import org.example.backend_dip.entity.books.BookDto;
 import org.example.backend_dip.repo.BookRepo;
 import org.example.backend_dip.service.EmailService;
 import org.example.backend_dip.service.ReadersService;
@@ -118,6 +117,14 @@ public ResponseEntity<List<Map<String, LocalDate>>> getReservedDates(@PathVariab
            BookReader bookReader = service.findByUsernameWithFavorites(principal.getName()).orElseThrow(()-> new RuntimeException("Օգտատերը չի գտնվել"));
            return ResponseEntity.ok(bookReader.getFavoriteBooks());
 
+    }
+
+    @Transactional
+    @GetMapping("/{reader_id}/getReservationsHistory")
+    public ResponseEntity<Set<Reservation>> getReservationHistory(@PathVariable("reader_id") Long id) {
+        BookReader bookReader =
+                service.findByReader_idWithReservationsHistory(id).orElseThrow(() -> new RuntimeException("Ամրագրված գրքեր չեն գտնվել"));
+        return ResponseEntity.ok(bookReader.getReservations());
     }
 
     @PostMapping("/sendMassageForAdmin")

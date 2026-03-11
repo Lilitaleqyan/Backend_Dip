@@ -34,6 +34,9 @@ public interface BookReaderRepo extends JpaRepository<BookReader, Long> {
     @Query("SELECT r FROM BookReader r LEFT JOIN FETCH r.favoriteBooks WHERE r.username = :username")
     Optional<BookReader> findByUsernameWithFavorites(@Param("username") String username);
 
+    @Query("SELECT r FROM BookReader  r LEFT JOIN FETCH r.reservations WHERE r.id = :id")
+    Optional<BookReader> findByReader_idWithReservationsHistory(@Param("id") Long id);
+
 //
 //    @Query("""
 //    SELECT new org.example.backend_dip.entity.BookReaderForAdmin(
