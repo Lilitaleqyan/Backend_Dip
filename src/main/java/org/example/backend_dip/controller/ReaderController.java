@@ -3,6 +3,7 @@ package org.example.backend_dip.controller;
 import jakarta.transaction.Transactional;
 import org.example.backend_dip.entity.BookComments;
 import org.example.backend_dip.entity.BookReader;
+import org.example.backend_dip.entity.BookRequest;
 import org.example.backend_dip.entity.Reservation;
 import org.example.backend_dip.entity.books.Book;
 import org.example.backend_dip.repo.BookRepo;
@@ -10,9 +11,11 @@ import org.example.backend_dip.service.EmailService;
 import org.example.backend_dip.service.ReadersService;
 import org.example.backend_dip.service.ReservService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailSender;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
 import java.time.LocalDate;
@@ -132,6 +135,16 @@ public ResponseEntity<List<Map<String, LocalDate>>> getReservedDates(@PathVariab
         String message = body.get("message");
         emailService.sendMessageForAdmin(message);
         return "Message sent";
+    }
+
+    @PostMapping(value = "/sendBook", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    public ResponseEntity<String> sendBook(@RequestPart("request") BookRequest request, @RequestPart(value = "file", required = false) MultipartFile file) {
+        String fileName = file.getOriginalFilename();
+        if (fileName != null &&(fileName.endsWith(".pdf")) || (fileName.endsWith(".djvu"))) {
+            emailService.sendMessageForAdmin(request.getFirstName(), request.getLastName(), file);
+            return ResponseEntity.ok("Գիրքը հաջողությամբ ուղարկվեց");
+        }
+        return ResponseEntity.badRequest().body("Անթույլատրելի ձևաչափ։ Միայն PDF կամ DJVu:");
     }
 
     @Transactional
