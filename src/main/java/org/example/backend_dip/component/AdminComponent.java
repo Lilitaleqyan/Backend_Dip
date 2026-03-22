@@ -24,7 +24,6 @@ public class AdminComponent implements ApplicationRunner {
         this.service = service;
         this.securityConfig = securityConfig;
     }
-
     @Override
     public void run(ApplicationArguments args) {
         if (service.existsByUsername(username)) {
@@ -35,7 +34,6 @@ public class AdminComponent implements ApplicationRunner {
         admin.setRole(Role.ADMIN);
         admin.setUsername(username);
         admin.setPassword(securityConfig.passwordEncoder().encode(password));
-        System.out.println(admin);
         service.save(admin);
     }
 
