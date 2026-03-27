@@ -112,7 +112,7 @@ public class AdminController {
 
             bookEntity = adminService.addBook(bookEntity);
 
-            if (bookDto.getCategory().equalsIgnoreCase("audiobook") && audioFile != null && !audioFile.isEmpty()) {
+            if (bookDto.getIsAudiobook() && audioFile != null && !audioFile.isEmpty()) {
 
 
                 Path audioDir = Paths.get(uploadDir, "audio");

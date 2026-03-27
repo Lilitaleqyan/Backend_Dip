@@ -8,6 +8,7 @@ import org.example.backend_dip.repo.SubscriptionRepository;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -52,8 +53,12 @@ public class EmailService {
         message.setText(massage);
         mailSender.send(message);
 
+    }
 
-    }    public void sendMessageForAdmin(String firstName, String lastName, MultipartFile file)  {
+
+
+    @Async
+    public void sendMessageForAdmin(String firstName, String lastName, MultipartFile file)  {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");

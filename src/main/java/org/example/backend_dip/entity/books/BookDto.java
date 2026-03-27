@@ -14,6 +14,7 @@ public class BookDto {
     private String author;
     private String description;
     private String category;
+    private Boolean isAudiobook;
     private String coverUrl;
     private String audioUrl;
     private String duration;
