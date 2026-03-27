@@ -67,6 +67,7 @@ public class AdminController {
                     .description(bookDto.getDescription())
                     .pages(bookDto.getPages())
                     .coverUrl(bookDto.getCoverUrl())
+                    .isAudioBook(bookDto.getIsAudioBook())
 //                    .audioUrl(bookDto.getAudioUrl())
                     .narrator(bookDto.getNarrator())
                     .duration(bookDto.getDuration())
@@ -112,7 +113,7 @@ public class AdminController {
 
             bookEntity = adminService.addBook(bookEntity);
 
-            if (bookDto.getIsAudiobook() && audioFile != null && !audioFile.isEmpty()) {
+            if (Boolean.TRUE.equals(bookDto.getIsAudioBook() ) && audioFile != null && !audioFile.isEmpty()) {
 
 
                 Path audioDir = Paths.get(uploadDir, "audio");

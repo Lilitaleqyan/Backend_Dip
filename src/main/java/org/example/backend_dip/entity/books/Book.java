@@ -33,8 +33,7 @@ public class Book {
     @Column(length = 1000)
     private String category;
 
-
-    private boolean isAudiobook = false;
+    private Boolean isAudioBook =false;
 
     @Column(columnDefinition = "text")
     private String coverUrl;
