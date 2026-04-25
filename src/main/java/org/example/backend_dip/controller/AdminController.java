@@ -42,6 +42,7 @@ public class AdminController {
     private final BookDtoForChatService bookDtoForChatService;
     private final BookDtoForChatRepo bookDtoForChatRepository;
     private final EmailService emailService;
+
     public AdminController(AdminService adminService, ReadersService readersService, BookRepo bookRepo, BookCopyService bookCopyService, ReservService reservService, BookDtoForChatService bookDtoForChatService, BookDtoForChatRepo bookDtoForChatRepository, EmailService emailService) {
         this.readersService = readersService;
         this.adminService = adminService;
@@ -71,7 +72,7 @@ public class AdminController {
 //                    .audioUrl(bookDto.getAudioUrl())
                     .narrator(bookDto.getNarrator())
                     .duration(bookDto.getDuration())
-                            .count(bookDto.getCount()+1).
+                    .count(bookDto.getCount() + 1).
                     build();
 
             if (file != null && !file.isEmpty()) {
@@ -113,7 +114,7 @@ public class AdminController {
 
             bookEntity = adminService.addBook(bookEntity);
 
-            if (Boolean.TRUE.equals(bookDto.getIsAudioBook() ) && audioFile != null && !audioFile.isEmpty()) {
+            if (Boolean.TRUE.equals(bookDto.getIsAudioBook()) && audioFile != null && !audioFile.isEmpty()) {
 
 
                 Path audioDir = Paths.get(uploadDir, "audio");
@@ -184,9 +185,6 @@ public class AdminController {
                                         @RequestPart(value = "file", required = false) MultipartFile multipartFile,
                                         @RequestPart(value = "audioFile", required = false) MultipartFile audioFile) {
         return bookRepo.findBookById(id).map(existingBook -> {
-//        adminService.deleteFilePath(existingBook.getFilePath());
-
-
             try {
                 existingBook.setTitle(bookDto.getTitle());
                 existingBook.setAuthor(bookDto.getAuthor());
@@ -195,13 +193,10 @@ public class AdminController {
                 existingBook.setPages(bookDto.getPages());
                 existingBook.setCoverUrl(bookDto.getCoverUrl());
                 existingBook.setFileType(bookDto.getFileType());
-//                existingBook.setFilePath(bookDto.getFilePath());
-//               existingBook.setAudioUrl(bookDto.getAudioUrl());
                 existingBook.setNarrator(bookDto.getNarrator());
                 existingBook.setDuration(bookDto.getDuration());
-
-
-                if (multipartFile != null && !multipartFile.isEmpty()) {
+                existingBook.setIsAudioBook(bookDto.getIsAudioBook());
+                  if (multipartFile != null && !multipartFile.isEmpty()) {
                     String originalFileName = multipartFile.getOriginalFilename();
                     String extension = originalFileName.substring(originalFileName.lastIndexOf(".") + 1);
                     if (!extension.equalsIgnoreCase("pdf")) {
@@ -219,7 +214,7 @@ public class AdminController {
                     existingBook.setFileType(extension);
                     existingBook.setFilePath(filePath);
                 }
-                if (bookDto.getCategory().equalsIgnoreCase("audiobook") && audioFile != null && !audioFile.isEmpty()) {
+                if (bookDto.getIsAudioBook() && audioFile != null && !audioFile.isEmpty()) {
 
 
                     Path audioDir = Paths.get(uploadDir, "audio");
@@ -239,14 +234,14 @@ public class AdminController {
                     existingBook.setAudioUrl(fileUrl);
                 }
                 System.out.println(existingBook.getFilePath());
-              bookDtoForChatRepository.findByBookId(id).map(bookDtoForChat -> {
+                bookDtoForChatRepository.findByBookId(id).map(bookDtoForChat -> {
                     bookDtoForChat.setAuthor(existingBook.getAuthor());
                     bookDtoForChat.setTitle(existingBook.getTitle());
                     bookDtoForChat.setCount(existingBook.getCount());
                     bookDtoForChat.setBook(existingBook);
                     bookDtoForChat.setFreeCount(bookDtoForChat.getFreeCount());
                     return ResponseEntity.ok(bookDtoForChatService.save(bookDtoForChat));
-                        });
+                });
                 return ResponseEntity.ok(adminService.updateBook(existingBook));
 
             } catch (Exception e) {
@@ -262,7 +257,6 @@ public class AdminController {
         List<Book> books = adminService.findBookByAuthorOrTitle(author, title);
         return ResponseEntity.ok(books);
     }
-
 
 
     @GetMapping("/findReader")

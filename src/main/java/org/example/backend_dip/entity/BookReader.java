@@ -3,6 +3,9 @@ package org.example.backend_dip.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.example.backend_dip.entity.books.Book;
 import org.example.backend_dip.entity.enums.Role;
@@ -26,10 +29,27 @@ public class BookReader {
     private String firstName;
     @Column(name = "last_name")
     private String lastName;
-        private String email;
+    @Pattern(
+            regexp = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$",
+            message = "Սխալ email ֆորմատ"
+    )
+    @NotBlank
+    private String email;
+    @Pattern(
+            regexp = "^(\\+374|0)?[1-9]{2}[0-9]{6}$",
+            message = "Հեռախոսահամարը սխալ է (օրինակ՝ 094123456 կամ +37494123456)"
+    )
     private String phone;
-    @Column(name = "user_name")
+
+    @Column(name = "user_name", unique = true)
     private String username;
+
+    @Size(min = 8, message = "Առնվազն 8 նիշ")
+    @Pattern(
+            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&.]).{8,}$",
+            message = "Գաղտնաբառը պետք է պարունակի մեծատառ, փոքրատառ, թիվ և սիմվոլ"
+    )
+    @Column(unique = true)
     private String password;
 
     private String resetToken;

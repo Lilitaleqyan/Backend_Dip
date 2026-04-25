@@ -26,7 +26,6 @@
             Path file = uploadsDir.resolve(filename).normalize();
             System.out.println(uploadsDir);
             Resource resource = new UrlResource(file.toUri());
-//            System.out.println(resource);
             if(resource.exists() || resource.isReadable()) {
                 return ResponseEntity.ok()
                         .contentType(MediaType.parseMediaType("audio/mpeg"))

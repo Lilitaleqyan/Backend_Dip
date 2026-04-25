@@ -67,7 +67,7 @@ public class AdminService {
         if (Files.exists(path) && Files.isRegularFile(path)) {
             Files.delete(path);
         }
-        if (book.isAudiobook()
+        if (book.getIsAudioBook()
                 && book.getAudioUrl() != null
                 && !book.getAudioUrl().isBlank()) {
 

@@ -46,7 +46,6 @@ public class LoginController {
     private final SubscriptionRepository subscriptionRepository;
 
 
-
     public LoginController(JwtUtil jwtUtil, AuthenticationManager authenticationManager,
                            MyUserDetailsService userDetailsService, PasswordEncoder passwordEncoder, ReadersService readerService,
                            AdminService adminService, EmailService emailService,
@@ -60,6 +59,7 @@ public class LoginController {
         this.emailService = emailService;
         this.subscriptionRepository = subscriptionRepository;
     }
+
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody BookReader bookReader) {
         if (readerService.existsByUsernameAndEmail(bookReader.getUsername(), bookReader.getEmail())) {
@@ -131,6 +131,7 @@ public class LoginController {
         }
         return "Log out successfully";
     }
+
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
 
@@ -152,7 +153,8 @@ public class LoginController {
                 resetLink
         );
 
-        return ResponseEntity.ok(Map.of("message", "Password updated"));    }
+        return ResponseEntity.ok(Map.of("message", "Password updated"));
+    }
 
 
     @PostMapping("/reset-password")

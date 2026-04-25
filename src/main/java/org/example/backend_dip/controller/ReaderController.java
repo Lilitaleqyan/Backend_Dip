@@ -138,7 +138,7 @@ public ResponseEntity<List<Map<String, LocalDate>>> getReservedDates(@PathVariab
         return "Message sent";
     }
 
-    @PostMapping(value = "/sendBook", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    @PostMapping(value = "/sendBook", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<String> sendBook(@RequestPart("request") BookRequest request, @RequestPart(value = "file", required = false) MultipartFile file) {
         if (file != null && file.getOriginalFilename() != null) {
             String fileName = file.getOriginalFilename().toLowerCase();
